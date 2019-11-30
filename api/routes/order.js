@@ -44,7 +44,6 @@ router.post('/create', (req, res) => {
            for(var j = 0; j < crusts.length; j++){
                if(orderdPizzas[i].crustSize.name === crusts[j].name &&
                 crusts[j].size === orderdPizzas[i].crustSize.size){
-                    
                     crustSize.name = crusts[j].name;
                     crustSize.price = crusts[j].price;
                     crustSize.slices = crusts[j].slices;
@@ -59,9 +58,6 @@ router.post('/create', (req, res) => {
 
         //  Process meats
         Meat.find({}).then((meats) => {
-           
-           /*  console.log('Meats');
-            console.log('================================'); */
             for(var i = 0; i < orderdPizzas.length; i++){
                 allPizzas[i].meats = new Array();
                 // Search ordered pizzas for meats
