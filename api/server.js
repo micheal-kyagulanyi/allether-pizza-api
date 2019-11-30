@@ -12,6 +12,10 @@ app.use(bodyParser.json());
 // Routes
 app.use('/order', orderRoutes);
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the Pizza API');
+});
+
 
 const port = process.env.PORT || 9000;
 
