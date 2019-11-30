@@ -98,7 +98,7 @@ var sauces = [
 var Sauce = mongoose.model('Sauce', sauceSchema);
 
 
-Source.insertMany(sources, (err) => {
+Sauce.insertMany(sauces, (err) => {
     if(err){
         console.log(err);
     }
