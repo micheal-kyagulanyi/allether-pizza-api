@@ -28,7 +28,7 @@ var sauceSchema = new Schema(
 
 
 // Populate a few sources into DB
-/* var sauces = [
+var sauces = [
     {
         name: 'Mozzarella',
         spreads: [
@@ -92,17 +92,17 @@ var sauceSchema = new Schema(
             },
         ]
     }
-];*/
+];
 
 // Create the Crust Model
 var Sauce = mongoose.model('Sauce', sauceSchema);
 
-/*
+
 Source.insertMany(sources, (err) => {
     if(err){
         console.log(err);
     }
-}); */
+});
 
 module.exports = {
     Sauce

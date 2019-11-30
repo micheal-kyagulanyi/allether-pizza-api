@@ -106,11 +106,11 @@ var crustsSizes = [
 // Create the Crust Model
 var CrustSize = mongoose.model('CrustSize', crustSizeSchema);
 
- /* CrustSize.insertMany(crustsSizes, (err) => {
+ CrustSize.insertMany(crustsSizes, (err) => {
     if(err){
         console.log(err);
     }
-});  */
+}); 
 
 module.exports = {
     CrustSize

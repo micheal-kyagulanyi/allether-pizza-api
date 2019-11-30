@@ -89,11 +89,11 @@ var toppings = [
 // Create the Crust Model
 var Topping = mongoose.model('Topping', toppingSchema);
 
-/* Topping.insertMany(toppings, (err) => {
+Topping.insertMany(toppings, (err) => {
     if(err){
         console.log(err);
     }
-}); */
+});
 
 module.exports = {
     Topping

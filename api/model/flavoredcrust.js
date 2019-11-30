@@ -27,7 +27,7 @@ var flavoredCrustSchema = new Schema(
 );
 
 // Script to add flavored crusts
-/* var flavoredCrusts = [
+var flavoredCrusts = [
     {
         name: 'Original Crust',
         spreads: [
@@ -84,16 +84,16 @@ var flavoredCrustSchema = new Schema(
             }
         ]
     }
-];*/
+];
 
 // Create the Crust Model
 var FlavoredCrust = mongoose.model('FlavoredCrust', flavoredCrustSchema);
-/*
+
 FlavoredCrust.insertMany(flavoredCrusts, (err) => {
     if(err){
         console.log(err);
     }
-}) */
+})
 
 module.exports = {
     FlavoredCrust
