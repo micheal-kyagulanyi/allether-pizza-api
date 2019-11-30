@@ -91,11 +91,11 @@ var meats = [
 var Meat = mongoose.model('Meat', meatSchema);
 
 
-Meat.insertMany(meats, (err) => {
+/* Meat.insertMany(meats, (err) => {
     if(err){
         console.log(err);
     }
-});
+}); */
 
 module.exports = {
     Meat

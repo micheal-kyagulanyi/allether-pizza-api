@@ -21,262 +21,321 @@ router.get('/', (req, res) => {
     );
 });
 
+
 router.post('/create', (req, res) => {
-   
-    var orderdPizzas = new Array();
+    // Create order
+    var insertOrder = new Object();
+    insertOrder._id = new ObjectID();
+    insertOrder.name = req.body.name;
+    insertOrder.ipAddress = req.connection.remoteAddress;
+    insertOrder.orderTime = Date.now();
+    insertOrder.deliveryStatus = req.body.deliveryStatus;
+    insertOrder.price = 0;
+    insertOrder.totalQuantity = 0;
+    insertOrder.pizzas = new Array();
 
-    var orderdMeats = new Array();
+    // Process all the pizzas from the incoming order
+    var orderPizzas = new Array();
+    orderPizzas = req.body.pizzas;
 
-    var order = new Object();
 
-    orderdPizzas = req.body.pizzas;
-
-     var allPizzas= new Array();
-   
-    var crusts;
-    CrustSize.find({}).then((crustSizes) => {
-        // DB crusts
-        crusts = crustSizes;
-        for(var i = 0; i < orderdPizzas.length; i++){
-            var crustSize = new Object();
-            var pizza = new Object();
-            // Search ordered pizzas for crusts
-           for(var j = 0; j < crusts.length; j++){
-               if(orderdPizzas[i].crustSize.name === crusts[j].name &&
-                crusts[j].size === orderdPizzas[i].crustSize.size){
-                    crustSize.name = crusts[j].name;
-                    crustSize.price = crusts[j].price;
-                    crustSize.slices = crusts[j].slices;
-                    crustSize.calCount = crusts[j].calCount;
-                    crustSize.size = crusts[j].size;
-                    pizza.crustSize = crustSize;
-                    allPizzas.push(pizza);
-                    break;
-               }
-           }
-        } // Added crust size to piza
-
-        //  Process meats
-        Meat.find({}).then((meats) => {
-            for(var i = 0; i < orderdPizzas.length; i++){
-                allPizzas[i].meats = new Array();
-                // Search ordered pizzas for meats
-                for(var j = 0; j < orderdPizzas[i].meats.length; j++){
-                    for(var k = 0; k < meats.length; k++){
-                        if(orderdPizzas[i].meats[j].name === meats[k].name){
-                            // Search the different amounts
-                            /* console.log('Meat:', meats[k].name); */
-                            for(var l = 0; l < meats[k].spreads.length; l++){
-                                if(meats[k].spreads[l].name === orderdPizzas[i].meats[j].amount){
-                                    /* console.log('Spread:', orderdPizzas[i].meats[j].amount);
-                                    // Get each spread details */
-                                    for(var m = 0; m < meats[k].spreads[l].amounts.length; m++){
-                                        if(orderdPizzas[i].meats[j].spread === meats[k].spreads[l].amounts[m].name){
-                                            allPizzas[i].meats.push({
-                                                spread: meats[k].spreads[l].amounts[m].name,
-                                                amount: meats[k].spreads[l].name,
-                                                name: meats[k].name,
-                                                price: meats[k].spreads[l].amounts[m].price,
-                                                calCount: meats[k].spreads[l].amounts[m].cal
-                                            });
-                                            break; 
-                                        }  
-                                    }
-                                }
-                                
-                            }
-                        }
-                    }
-                }
-            }
-            
-        }); // End process meats
        
+    var toSavePizzas = new Array();
+    orderPizzas.forEach(orderPizza => {
+        var toSavePizza = new Object();
+        // 1. Update the crust and size info, with data from the db
+        var crustSize = new Object();
+        CrustSize.findOne({name: orderPizza.crustSize.name}).then(
+            (crust) => {
+                // Find each crust info from the db
+                var crustInfo = crust.sizes.find((size) => {
+                    return size.name === orderPizza.crustSize.size;
+                });
+                // Update crust info
+                crustSize.name = crust.name;
+                crustSize.size = crustInfo.name;
+                crustSize.price = crustInfo.price;
+                crustSize.slices = crustInfo.slices;
+                crustSize.calCount = crustInfo.calCount;
 
-        // Todo process other toppings
-        Topping.find({}).then((toppings) => {
+                // Update to save pizza
+                toSavePizza.crustSize = crustSize;
+                toSavePizza.price = crustSize.price;
+                toSavePizza.calCount = crustSize.calCount;
+
+                // Process the sauce options
+                if(orderPizza.sauceOptions){
+                    return Sauce.find({});
+                }
+            }
+        )
+        .then((dbSauces) => {
+            var toSaveSaucesOptions = new Array();
+            if(orderPizza.sauceOptions){
+                orderPizza.sauceOptions.forEach((orderSauce) => {
+                    var toSaveSauce = new Object();
+                    // Find source from OrderSauces
+                    var dbSauce = dbSauces.find((sauce) => {
+                        return sauce.name === orderSauce.name;
+                    });
+                    toSaveSauce.name = dbSauce.name;
+                    var dbSpread = dbSauce.spreads.find((spread) => {
+                        return spread.name === orderSauce.amount;
+                    }); 
+                    // Todo Update to save spread
+                    toSaveSauce.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderSauce.spread || orderSauce.spread === 'None';
+                    });
+                    toSaveSauce.spread = amountsDetail.name;
+                    toSaveSauce.calCount = amountsDetail.cal;
+                    toSaveSauce.price = amountsDetail.price; 
+                    toSaveSaucesOptions.push(toSaveSauce);
+                });
+    
+                // Update pizza
+                toSavePizza.sauceOptions = toSaveSaucesOptions;
+                // Update pizza price and calcount
+                const sauceCost = toSaveSaucesOptions.reduce(
+                    (currentPrice, sauce) => {
+                        return sauce.price + currentPrice;
+                    }, 
+                    0
+                );
+                toSavePizza.price += sauceCost;
+    
+                const sauceCal = toSaveSaucesOptions.reduce(
+                    (currentCal, sauce) => {
+                        return sauce.calCount + currentCal;
+                    }, 
+                    0
+                );
+                toSavePizza.calCount += sauceCal;
+            }
             
-           for(var i = 0; i < orderdPizzas.length; i++){
-                allPizzas[i].otherToppings = new Array();
-               // For each toppings list
-               for(var j = 0; j < orderdPizzas[i].otherToppings.length; j++){
-                   // Search for topping from the db
-                    for(var k = 0; k < toppings.length; k++){
-                        // Check for a match
-                        if(orderdPizzas[i].otherToppings[j].name === toppings[k].name){
-                            // Search the db topping for spreads
-                            for(var l = 0; l < toppings[k].spreads.length; l++){
-                                // Check for match with order spread
-                                if(toppings[k].spreads[l].name === orderdPizzas[i].otherToppings[j].amount){
-                                    for(var m = 0; m < toppings[k].spreads[l].amounts.length; m++){
-                                        if(orderdPizzas[i].otherToppings[j].spread === toppings[k].spreads[l].amounts[m].name){
-                                            allPizzas[i].otherToppings.push({
-                                                spread: toppings[k].spreads[l].amounts[m].name,
-                                                amount: toppings[k].spreads[l].name,
-                                                name: toppings[k].name,
-                                                price: toppings[k].spreads[l].amounts[m].price,
-                                                calCount: toppings[k].spreads[l].amounts[m].cal
-                                            });
-                                            break; 
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-               }
-           }
-
-        });
-
-        // Todo process flavored crust
-        FlavoredCrust.find({}).then((flavoredCrusts) => {
-            var orderflavoredCrusts = new Array();
-           for(var i = 0; i < orderdPizzas.length; i++){
-            allPizzas[i].flavoredCrusts = new Array();
-               // For each flavoredCrusts list
-               for(var j = 0; j < orderdPizzas[i].flavoredCrusts.length; j++){
-                   // Search for topping from the db
-                    for(var k = 0; k < flavoredCrusts.length; k++){
-                        // Check for a match
-                        if(orderdPizzas[i].flavoredCrusts[j].name === flavoredCrusts[k].name){
-                            // Search the db topping for spreads
-                            for(var l = 0; l < flavoredCrusts[k].spreads.length; l++){
-                                // Check for match with order spread
-                                if(flavoredCrusts[k].spreads[l].name === orderdPizzas[i].flavoredCrusts[j].amount){
-                                    for(var m = 0; m < flavoredCrusts[k].spreads[l].amounts.length; m++){
-                                        if(orderdPizzas[i].flavoredCrusts[j].spread === flavoredCrusts[k].spreads[l].amounts[m].name){
-                                            ;
-                                            allPizzas[i].flavoredCrusts.push({
-                                                spread: flavoredCrusts[k].spreads[l].amounts[m].name,
-                                                amount: flavoredCrusts[k].spreads[l].name,
-                                                name: flavoredCrusts[k].name,
-                                                price: flavoredCrusts[k].spreads[l].amounts[m].price,
-                                                calCount: flavoredCrusts[k].spreads[l].amounts[m].cal
-                                            });
-                                            break; 
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-               }
-           }
-           
-        }); // Adding flavored crusts
-
-        //  Todo - Get drinks
-        Drink.find({}).then((drinks) => {
-            for(var i = 0; i < orderdPizzas.length; i++){
-                allPizzas[i].drinks = new Array();
-                for(var j = 0; j < orderdPizzas[i].drinks.length; j++){
-                    // Search for drink from the db
-                    for(var k = 0; k < drinks.length; k++){
-                        if(drinks[k].name === orderdPizzas[i].drinks[j].name){
-                            // Search orderd drink for price
-                            for(var l = 0; l < drinks[k].sizes.length; l++){
-                                if(drinks[k].sizes[l].name === orderdPizzas[i].drinks[j].size){
-                                    allPizzas[i].drinks.push(
-                                        {
-                                            name: drinks[k].name,
-                                            size: drinks[k].sizes[l].name,
-                                            price: drinks[k].sizes[l].price
-                                        }
-                                    );
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Todd - Get source options
-        Sauce.find({}).then((sauceOptions) => {
             
-            //console.log(sauceOptions.length);
-           for(var i = 0; i < orderdPizzas.length; i++){
-            allPizzas[i].sauceOptions = new Array();
-               // For each sauceOptions list
-               for(var j = 0; j < orderdPizzas[i].sauceOptions.length; j++){
-                   // Search for topping from the db
-                    for(var k = 0; k < sauceOptions.length; k++){
-                        // Check for a match
-                        if(orderdPizzas[i].sauceOptions[j].name === sauceOptions[k].name){
-                            for(var l = 0; l < sauceOptions[k].spreads.length; l++){
-                                // Check for match with order spread
-                                if(sauceOptions[k].spreads[l].name === orderdPizzas[i].sauceOptions[j].amount){
-                                    for(var m = 0; m < sauceOptions[k].spreads[l].amounts.length; m++){
-                                        if(orderdPizzas[i].sauceOptions[j].spread === 'None' || orderdPizzas[i].sauceOptions[j].spread === sauceOptions[k].spreads[l].amounts[m].name){
-                                            allPizzas[i].sauceOptions.push({
-                                                spread: sauceOptions[k].spreads[l].amounts[m].name,
-                                                amount: sauceOptions[k].spreads[l].name,
-                                                name: sauceOptions[k].name,
-                                                price: sauceOptions[k].spreads[l].amounts[m].price,
-                                                calCount: sauceOptions[k].spreads[l].amounts[m].cal
-                                            });
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-               }
-           }
-           
-            var price = 0
-           for(var i = 0; i < allPizzas.length; i++){
-                var tPrice = 0;
-                allPizzas[i].price =  allPizzas[i].crustSize.price;
-                allPizzas[i].calCount =  allPizzas[i].crustSize.calCount;
+            // Process meats
+            if(orderPizza.meats){
+                return Meat.find({});
+            }
+            
+        })
+        .then((dbMeats) => {
+            var toSaveMeats = new Array();
+            if(orderPizza.meats) {
+                orderPizza.meats.forEach((orderMeat) => {
+                    var toSaveMeat = new Object();
+                    // Find source from OrderSauces
+                    var dbMeat = dbMeats.find((meat) => {
+                        return meat.name === orderMeat.name;
+                    });
+                    toSaveMeat.name = dbMeat.name;
+                    var dbSpread = dbMeat.spreads.find((spread) => {
+                        return spread.name === orderMeat.amount;
+                    }); 
+                    // Todo Update to save spread
+                    toSaveMeat.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderMeat.spread;
+                    });
+                    toSaveMeat.spread = amountsDetail.name;
+                    toSaveMeat.calCount = amountsDetail.cal;
+                    toSaveMeat.price = amountsDetail.price; 
+                    toSaveMeats.push(toSaveMeat);
+                });
+    
+                // Update pizza
+                toSavePizza.meats = toSaveMeats;
+                // Update pizza price and calcount
+                const meatCost = toSaveMeats.reduce(
+                    (currentPrice, meat) => {
+                        return meat.price + currentPrice;
+                    }, 
+                    0
+                );
+                toSavePizza.price += meatCost;
+    
+                const meatCal = toSaveMeats.reduce(
+                    (currentCal, meat) => {
+                        return meat.calCount + currentCal;
+                    }, 
+                    0
+                );
+                toSavePizza.calCount += meatCal;
+            }
+            // Process other toppings
+            if(orderPizza.otherToppings){
+                return Topping.find({});
+            }
+            
+            
+        })
+        .then((dbToppings) => {
+            var toSaveOtherToppings = new Array();
+            if(orderPizza.otherToppings){
+                orderPizza.otherToppings.forEach((orderOtherTopping) => {
+                    var toSaveOtherTopping = new Object();
+                    // Find source from OrderSauces
+                    var dbTopping = dbToppings.find((topping) => {
+                        return topping.name === orderOtherTopping.name;
+                    });
+                    toSaveOtherTopping.name = dbTopping.name;
+                    var dbSpread = dbTopping.spreads.find((spread) => {
+                        return spread.name === orderOtherTopping.amount;
+                    }); 
+                    // Todo Update to save spread
+                    toSaveOtherTopping.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderOtherTopping.spread;
+                    });
+    
+                    toSaveOtherTopping.spread = amountsDetail.name;
+                    toSaveOtherTopping.calCount = amountsDetail.cal;
+                    toSaveOtherTopping.price = amountsDetail.price; 
+                    toSaveOtherToppings.push(toSaveOtherTopping);
+                });
+    
+                // Update pizza
+                toSavePizza.otherToppings = toSaveOtherToppings;
+                // Update pizza price and calcount
+                const toppingCost = toSaveOtherToppings.reduce(
+                    (currentPrice, topping) => {
+                        return topping.price + currentPrice;
+                    }, 
+                    0
+                );
+                toSavePizza.price += toppingCost;
+    
+                const toppingCal = toSaveOtherToppings.reduce(
+                    (currentCal, topping) => {
+                        return topping.calCount + currentCal;
+                    }, 
+                    0
+                );
+    
+                toSavePizza.calCount += toppingCal;
+            }
+            
+            // Process other toppings
+            if(orderPizza.flavoredCrusts) {
+                return FlavoredCrust.find({});
+            }
+        })
+        .then((dbFlavoredCrusts) => {
+            var toSaveFlavoredCrusts = new Array();
 
-                for(var a = 0; a < allPizzas[i].meats.length; a++){
-                    allPizzas[i].price += allPizzas[i].meats[a].price;
-                    allPizzas[i].calCount += allPizzas[i].meats[a].calCount;
-                }
-
-                for(var a = 0; a < allPizzas[i].flavoredCrusts.length; a++){
-                    allPizzas[i].price += allPizzas[i].flavoredCrusts[a].price;
-                    allPizzas[i].calCount += allPizzas[i].meats[a].calCount;
-                }
-
-                for(var a = 0; a < allPizzas[i].otherToppings.length; a++){
-                    allPizzas[i].price += allPizzas[i].otherToppings[a].price;
-                    allPizzas[i].calCount += allPizzas[i].otherToppings[a].calCount;
-                }
-
-                for(var a = 0; a < allPizzas[i].drinks.length; a++){
-                    allPizzas[i].price += allPizzas[i].drinks[a].price;
-                }
+            if(orderPizza.flavoredCrust){
+                // Do nothing go to the next step
+                orderPizza.flavoredCrusts.forEach((orderFlavoredCrust) => {
+                    var toSaveFlavoredCrust = new Object();
+                    // Find source from OrderSauces
+                    var dbFlavoredCrust = dbFlavoredCrusts.find((flavoredCrust) => {
+                        return flavoredCrust.name === orderFlavoredCrust.name;
+                    });
+                    toSaveFlavoredCrust.name = dbFlavoredCrust.name;
+                    var dbSpread = dbFlavoredCrust.spreads.find((spread) => {
+                        return spread.name === orderFlavoredCrust.amount;
+                    }); 
+                    // Todo Update to save spread
+                    toSaveFlavoredCrust.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderFlavoredCrust.spread;
+                    });
+    
+                    toSaveFlavoredCrust.spread = amountsDetail.name;
+                    toSaveFlavoredCrust.calCount = amountsDetail.cal;
+                    toSaveFlavoredCrust.price = amountsDetail.price; 
+                    toSaveFlavoredCrusts.push(toSaveFlavoredCrust);
+                });
+    
+                // Update pizza
+                toSavePizza.flavoredCrusts = toSaveFlavoredCrusts;
+                // Update pizza price and calcount
+                const flavoredCrustCost = toSaveFlavoredCrusts.reduce(
+                    (currentPrice, flavoredCrust) => {
+                        return flavoredCrust.price + currentPrice;
+                    }, 
+                    0
+                );
+                toSavePizza.price += flavoredCrustCost;
+    
+                const flavoredCrustCal = toSaveFlavoredCrusts.reduce(
+                    (currentCal, flavoredCrust) => {
+                        return flavoredCrust.calCount + currentCal;
+                    }, 
+                    0
+                );
+    
+                toSavePizza.calCount += flavoredCrustCal;
             }
 
-            var price = 0
-            for(var i = 0; i < allPizzas.length; i++){
-                price += allPizzas[i].price;
+            // Process Drinks
+            if(orderPizza.drinks){
+                return Drink.find({});
             }
+        })
+        .then((dbDrinks) => {
+            var toSaveDrinks = new Array();
 
-            order._id = new ObjectID();
-            order.name = req.body.name;
-            order.ipAddress = req.connection.remoteAddress;
-            order.address =  req.body.address;
-            order.orderTime = Date.now();
-            order.deliverStatus = req.body.deliveryStatus;
-            order.totalPrice = price;
-            order.totalQuantity = allPizzas.length;
-            order.pizzas = allPizzas;
+            if(orderPizza.drinks){
+                // Do nothing go to the next step
+                orderPizza.drinks.forEach((orderDrink) => {
+                    var toSaveDrink = new Object();
+                    // Find source from OrderSauces
+                    var dbDrink = dbDrinks.find((drink) => {
+                        return drink.name === orderDrink.name;
+                    });
 
-            // Todo save data to db
-            var myOrder = new Order(order);
-            myOrder.save().then((doc) => {
-                res.send(JSON.stringify(doc));
-            }).catch((e) => {
-                console.log(e);
-            });
-        });
-    });
+                    toSaveDrink.name = dbDrink.name;
+
+                    var amountsDetail = dbDrink.sizes.find((amount) => {
+                        return amount.name === orderDrink.size;
+                    });
+    
+                    toSaveDrink.size = amountsDetail.name;
+                    toSaveDrink.price = amountsDetail.price; 
+                    toSaveDrinks.push(toSaveDrink);
+                });
+    
+                // Update pizza
+                toSavePizza.drinks = toSaveDrinks;
+                // Update pizza price and calcount
+                const drinkCost = toSaveDrinks.reduce(
+                    (currentPrice, drink) => {
+                        return drink.price + currentPrice;
+                    }, 
+                    0
+                );
+                toSavePizza.price += drinkCost;
+                // Wait on this
+                //console.log(toSavePizza);
+
+                insertOrder.price += toSavePizza.price;
+                insertOrder.totalQuantity += 1;
+                insertOrder.pizzas.push(toSavePizza);
+            }
+        })
+        .catch(
+            (err) => {
+                console.log(err);
+            }
+        );
+    }); // orderPizzas.forEach
+
+
+    // Code here executes before db processing i.e all the above code
+    // the insertOrder object has pizzas, price and totalQuantity not 
+    // updated
+
+/* 
+    var myOrder = new Order(insertOrder);
+    myOrder.save().then((doc) => {
+        res.json(insertOrder);
+    }).catch((e) => {
+        console.log(e);
+    }); */
+        
+   
     
 });
 

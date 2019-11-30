@@ -89,11 +89,11 @@ var flavoredCrusts = [
 // Create the Crust Model
 var FlavoredCrust = mongoose.model('FlavoredCrust', flavoredCrustSchema);
 
-FlavoredCrust.insertMany(flavoredCrusts, (err) => {
+/* FlavoredCrust.insertMany(flavoredCrusts, (err) => {
     if(err){
         console.log(err);
     }
-})
+}); */
 
 module.exports = {
     FlavoredCrust

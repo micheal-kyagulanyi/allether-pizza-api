@@ -87,11 +87,11 @@ var drinkSchema = new Schema(
 // Create the Crust Model
 var Drink = mongoose.model('Drink', drinkSchema);
 
-Drink.insertMany(drinks, (err) => {
+/* Drink.insertMany(drinks, (err) => {
     if(err){
         console.log(err);
     }
-});
+}); */
 
 module.exports = {
     Drink

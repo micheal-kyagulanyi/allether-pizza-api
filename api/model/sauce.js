@@ -98,11 +98,11 @@ var sauces = [
 var Sauce = mongoose.model('Sauce', sauceSchema);
 
 
-Sauce.insertMany(sauces, (err) => {
+/* Sauce.insertMany(sauces, (err) => {
     if(err){
         console.log(err);
     }
-});
+}); */
 
 module.exports = {
     Sauce
