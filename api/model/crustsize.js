@@ -77,7 +77,7 @@ var crustsSizes = [
     },
     {
         name: 'Thin Crust',
-        size: [
+        sizes: [
             {
                 name: 'Medium',
                 price: 8.00,
