@@ -114,6 +114,46 @@ if(err){
 }
 });  */
 
+
+/*
+FUNCTION NAME: updateCrustSize
+INPUTS: orderedPizza(object)
+OUTPUTS: crustSize(object)
+*/
+var updateCrustSize = (orderedPizza) => {
+    return new Promise((resolve, reject) => {
+        if(orderedPizza.crustSize){
+            var crustSize = {};
+            // Try getting crust from the DB
+            CrustSize.findOne({name: orderedPizza.crustSize.name}).then(
+                // Found the crust
+                (crust) => {
+                    // Get this crust size name
+                    var crustInfo = crust.sizes.find((size) => {
+                        return size.name === orderedPizza.crustSize.size;
+                    });
+                    // Update this crust info
+                    crustSize.name = crust.name;
+                    crustSize.size = crustInfo.name;
+                    crustSize.price = crustInfo.price;
+                    crustSize.slices = crustInfo.slices;
+                    crustSize.calCount = crustInfo.calCount;
+    
+                   /*  // Update to save pizza
+                    toSavePizza.crustSize = crustSize;
+                    toSavePizza.price = crustSize.price;
+                    toSavePizza.calCount = crustSize.calCount; */
+
+                    // Return toSavePizza
+                    resolve(crustSize);
+                }, (err) => {
+                    reject('Could not find the crust',err);
+                }
+            );
+        }
+    });
+}
+
 module.exports = {
-    CrustSize
+    updateCrustSize
 };

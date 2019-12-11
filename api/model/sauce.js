@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const {db} = require('../db/database');
+const {getSum} = require('../helpers');
 
 // Setup my database
 var Schema = mongoose.Schema;
@@ -104,6 +105,53 @@ var Sauce = mongoose.model('Sauce', sauceSchema);
     }
 }); */
 
+
+/*
+FUNCTION NAME: updateSauce
+INPUTS: orderedPizza(object)
+OUTPUTS: toSaveSaucesOptions(array)
+*/
+var updateSauce = (orderPizza) => {
+    return new Promise((resolve, reject) => {
+        if(orderPizza.sauceOptions){
+            var toSaveSaucesOptions = [];
+            var counter = 0;
+            orderPizza.sauceOptions.forEach((orderSauce) => {
+                var toSaveSauce = {};
+                Sauce.findOne({name: orderSauce.name})
+                .then((dbSauce) => {
+                    // Find source from OrderSauces
+
+                    // Update toSaveSauce
+                    toSaveSauce.name = dbSauce.name;
+                    var dbSpread = dbSauce.spreads.find((spread) => {
+                        return spread.name === orderSauce.amount;
+                    }); 
+
+                    toSaveSauce.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderSauce.spread || orderSauce.spread === 'None';
+                    });
+                    toSaveSauce.spread = amountsDetail.name;
+                    toSaveSauce.calCount = amountsDetail.cal;
+                    toSaveSauce.price = amountsDetail.price; 
+
+                    // Add each sauce to the save list
+                    toSaveSaucesOptions.push(toSaveSauce);
+                    if(toSaveSaucesOptions.length === 
+                        orderPizza.sauceOptions.length){
+                            resolve(toSaveSaucesOptions);
+                    }
+                    
+
+                },
+                (err) => {
+                    console.log('DB error', err);
+                });
+            });
+        }
+    });
+}
 module.exports = {
-    Sauce
+    updateSauce
 };
