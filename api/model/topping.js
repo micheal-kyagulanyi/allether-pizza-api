@@ -95,6 +95,66 @@ var Topping = mongoose.model('Topping', toppingSchema);
     }
 }); */
 
+
+/*
+FUNCTION NAME: updateOtherTopping
+INPUTS: orderedPizza(object)
+OUTPUTS: toSaveOtherToppings(array)
+AUTHOR: Michael Kyagulanyi
+*/
+var updateOtherTopping = (orderPizza) => {
+    return new Promise((resolve, reject) => {
+
+        // List to hold all the toppings for a pizza
+        var toSaveOtherToppings = [];
+
+        // Do we have ordered toppings for this pizza
+        if(orderPizza.otherToppings){
+            // Iterate through meats
+            orderPizza.otherToppings.forEach((orderOtherTopping) => {
+                var toSaveOtherTopping = {};
+                // Try finding flavored crust from the DB
+                Topping.findOne({name: orderOtherTopping.name})
+                .then((dbOtherTopping) => {
+                    // Find topping from order toppings
+                    // Update toSaveOtherTopping
+                    toSaveOtherTopping.name = dbOtherTopping.name;
+                    var dbSpread = dbOtherTopping.spreads.find((spread) => {
+                        return spread.name === orderOtherTopping.amount;
+                    }); 
+
+                    //console.log('Spread name:::',dbSpread.name);
+                    toSaveOtherTopping.amount = dbSpread.name;
+
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderOtherTopping.spread;
+                    });
+                    
+                    toSaveOtherTopping.spread = amountsDetail.name;
+                    toSaveOtherTopping.calCount = amountsDetail.cal;
+                    toSaveOtherTopping.price = amountsDetail.price; 
+                    // Add each topping to the save list
+                    toSaveOtherToppings.push(toSaveOtherTopping);
+                    // Have we iterrated through all toppings
+                    if(toSaveOtherToppings.length === 
+                        orderPizza.otherToppings.length){
+                            resolve(toSaveOtherToppings);
+                    }
+                },
+                (err) => {
+                    resolve('Could not find topping');
+                });
+            });
+        } else {
+            /*  Making sure that we always resolve with an empty array
+                So, we can work with promise all. Because if any of the 
+                promises doesn't resolve, the whole chain fails
+            */
+            resolve(toSaveOtherToppings);
+        }
+    });
+}
+
 module.exports = {
-    Topping
+    updateOtherTopping
 };

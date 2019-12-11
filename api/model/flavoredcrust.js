@@ -95,6 +95,63 @@ var FlavoredCrust = mongoose.model('FlavoredCrust', flavoredCrustSchema);
     }
 }); */
 
+
+/*
+FUNCTION NAME: updateFlavoredCrust
+INPUTS: orderedPizza(object)
+OUTPUTS: toSaveFlavoredCrusts(array)
+AUTHOR: Michael Kyagulanyi
+*/
+var updateFlavoredCrust = (orderPizza) => {
+    return new Promise((resolve, reject) => {
+        var toSaveFlavoredCrusts = [];
+
+        // Do we have ordered meats for this pizza
+        if(orderPizza.flavoredCrusts){
+            // Iterate through meats
+            orderPizza.flavoredCrusts.forEach((orderFlavoredCrust) => {
+                var toSaveFlavoredCrust = {};
+                // Try finding flavored crust from the DB
+                FlavoredCrust.findOne({name: orderFlavoredCrust.name})
+                .then((dbFlavoredCrust) => {
+                    // Find flavored from order flavored crusts
+                    // Update toSaveFlavoredCrust
+                    toSaveFlavoredCrust.name = dbFlavoredCrust.name;
+                    var dbSpread = dbMeat.spreads.find((spread) => {
+                        return spread.name === orderFlavoredCrust.amount;
+                    }); 
+
+                    toSaveFlavoredCrust.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderFlavoredCrust.spread;
+                    });
+                    toSaveFlavoredCrust.spread = amountsDetail.name;
+                    toSaveFlavoredCrust = amountsDetail.cal;
+                    toSaveFlavoredCrust.price = amountsDetail.price; 
+
+                    // Add each flavored crust to the save list
+                    toSaveFlavoredCrusts.push(toSaveFlavoredCrust);
+
+                    // Have we iterrated through all flavored crusts
+                    if(toSaveFlavoredCrusts.length === 
+                        orderPizza.flavoredCrusts.length){
+                            resolve(toSaveFlavoredCrusts);
+                    }
+                },
+                (err) => {
+                    resolve('Could not find crust');
+                });
+            });
+        } else {
+            /*  Making sure that we always resolve with an empty array
+                So, we can work with promise all. Because if any of the 
+                promises doesn't resolve, the whole chain fails
+            */
+            resolve(toSaveFlavoredCrusts);
+        }
+    });
+}
+
 module.exports = {
-    FlavoredCrust
+    updateFlavoredCrust
 };

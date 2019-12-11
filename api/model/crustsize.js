@@ -151,6 +151,8 @@ var updateCrustSize = (orderedPizza) => {
                     reject('Could not find the crust',err);
                 }
             );
+        } else {
+            resolve(crustSize);
         }
     });
 }

@@ -114,8 +114,9 @@ AUTHOR: Michael Kyagulanyi
 */
 var updateSauce = (orderPizza) => {
     return new Promise((resolve, reject) => {
+        var toSaveSaucesOptions = [];
         if(orderPizza.sauceOptions){
-            var toSaveSaucesOptions = [];
+            
             var counter = 0;
             orderPizza.sauceOptions.forEach((orderSauce) => {
                 var toSaveSauce = {};
@@ -143,13 +144,17 @@ var updateSauce = (orderPizza) => {
                         orderPizza.sauceOptions.length){
                             resolve(toSaveSaucesOptions);
                     }
-                    
-
                 },
                 (err) => {
                     console.log('DB error', err);
                 });
             });
+        } else {
+            /*  Making sure that we always resolve with an empty array
+                So, we can work with promise all. Because if any of the 
+                promises doesn't resolve, the whole chain fails
+            */
+            resolve(toSaveSaucesOptions);
         }
     });
 }

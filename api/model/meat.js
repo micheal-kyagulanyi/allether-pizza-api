@@ -97,6 +97,63 @@ var Meat = mongoose.model('Meat', meatSchema);
     }
 }); */
 
+
+/*
+FUNCTION NAME: updateMeat
+INPUTS: orderedPizza(object)
+OUTPUTS: toSaveMeats(array)
+AUTHOR: Michael Kyagulanyi
+*/
+var updateMeat = (orderPizza) => {
+    return new Promise((resolve, reject) => {
+        var toSaveMeats = [];
+
+        // Do we have ordered meats for this pizza
+        if(orderPizza.meats){
+            // Iterate through meats
+            orderPizza.meats.forEach((orderMeat) => {
+                var toSaveMeat = {};
+                // Try finding meat from the DB
+                Meat.findOne({name: orderMeat.name})
+                .then((dbMeat) => {
+                    // Find source from OrderSauces
+                    // Update toSaveMeat
+                    toSaveMeat.name = dbMeat.name;
+                    var dbSpread = dbMeat.spreads.find((spread) => {
+                        return spread.name === orderMeat.amount;
+                    }); 
+
+                    toSaveMeat.amount = dbSpread.name;
+                    var amountsDetail = dbSpread.amounts.find((amount) => {
+                        return amount.name === orderMeat.spread;
+                    });
+                    toSaveMeat.spread = amountsDetail.name;
+                    toSaveMeat.calCount = amountsDetail.cal;
+                    toSaveMeat.price = amountsDetail.price; 
+
+                    // Add each meat to the save list
+                    toSaveMeats.push(toSaveMeat);
+
+                    // Have we iterrated through all the meats
+                    if(toSaveMeats.length === 
+                        orderPizza.meats.length){
+                            resolve(toSaveMeats);
+                    }
+                },
+                (err) => {
+                    resolve('Could not find meat');
+                });
+            });
+        } else {
+            /*  Making sure that we always resolve with an empty array
+                So, we can work with promise all. Because if any of the 
+                promises doesn't resolve, the whole chain fails
+            */
+            resolve(toSaveMeats);
+        }
+    });
+}
+
 module.exports = {
-    Meat
+    updateMeat
 };

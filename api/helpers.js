@@ -6,6 +6,15 @@ var totalCal = (list) => {
     return sum;
 };
 
+
+var totalPrice = (list) => {
+    sum = 0;
+    for(var i = 0; i < list.length; i++){
+        sum = sum + list[i].price;
+    }
+    return sum;
+};
+
 var getSum = (list) => {
     let total = list.reduce(
         (accumulator, element) => {
@@ -24,5 +33,6 @@ var getSum = (list) => {
 
 
 module.exports = {
-   getSum
+   totalCal,
+   totalPrice
 };

@@ -5,12 +5,12 @@ const {Promise} = require('bluebird');
 
 var {Order} = require('./../model/order');
 var {updateCrustSize} = require('./../model/crustsize');
-var {Meat} = require('./../model/meat');
-var {FlavoredCrust} = require('./../model/flavoredcrust');
+var {updateMeat} = require('./../model/meat');
+var {updateFlavoredCrust} = require('./../model/flavoredcrust');
 var {updateSauce} = require('./../model/sauce');
-var {Drink} = require('./../model/drink');
-var {Topping} = require('./../model/topping');
-var {getSum} = require('./../helpers');
+var {updateDrink} = require('./../model/drink');
+var {updateOtherTopping} = require('./../model/topping');
+var {totalCal, totalPrice} = require('./../helpers');
 
 router.get('/', (req, res) => {
     // List the orders
@@ -25,7 +25,7 @@ router.get('/', (req, res) => {
 router.post('/create', (req, res) => {
     // Create order
     var insertOrder = {};
-    insertOrder._id = new ObjectID();
+    //insertOrder._id = new ObjectID();
     insertOrder.name = req.body.name;
     insertOrder.ipAddress = req.connection.remoteAddress;
     insertOrder.orderTime = Date.now();
@@ -39,26 +39,69 @@ router.post('/create', (req, res) => {
     orderPizzas = req.body.pizzas;
      // Global variable to hold all the pizzas on the order        
     toSavePizzas = [];
-    var i = 0;
-    // Update each pizza with db info
-    orderPizzas.forEach(orderPizza => {
-        toSavePizza = {};
+    
+    orderPizzas.forEach(pizza => {
         Promise.all(
             [
-                updateCrustSize(orderPizza),
-                updateSauce(orderPizza)
-            ]
-        )
-        .spread((crust, sauces) => {
-            // This promise only runs once for the whole loop
-            // To-do: Need to research about this
-            console.log('Crust: ',crust);
-            console.log('Sauces: ',sauces);
+                updateCrustSize(pizza),
+                updateSauce(pizza),
+                updateMeat(pizza),
+                updateFlavoredCrust(pizza),
+                updateOtherTopping(pizza),
+                updateDrink(pizza)
+            ])
+        .spread((crust, sauces, meats, flavoredCrusts, otherToppings, drinks) => {
+            // Update toSavePizza with updated info
+            var toSavePizza = {};
+            toSavePizza.price = 0;
+            toSavePizza.calCount = 0;
 
-        });
-    }); // End orderPizzas.forEach i.e updating @ pizza
-     
-   
+            // Update cook options
+
+            if(crust !== undefined){
+                toSavePizza.updateCrustSize = crust;
+                toSavePizza.price += crust.price;
+                toSavePizza.calCount += crust.calCount;
+            } 
+
+            if(sauces.length > 0){
+                toSavePizza.sauceOptions = sauces;
+            }
+
+            if(meats.length > 0){
+                toSavePizza.meats = meats; 
+                toSavePizza.price += totalPrice(meats);
+                toSavePizza.calCount += totalCal(meats);
+            }
+
+            if(flavoredCrusts.length > 0){
+                toSavePizza.flavoredCrusts = flavoredCrusts;
+                toSavePizza.price += totalPrice(flavoredCrusts);
+                toSavePizza.totalCal += totalCal(flavoredCrusts);
+            }
+
+            if(otherToppings.length > 0){
+                toSavePizza.otherToppings = otherToppings;
+                toSavePizza.price += totalPrice(otherToppings);
+                toSavePizza.calCount += totalCal(otherToppings);
+            }
+
+            if(drinks.length > 0){
+                toSavePizza.drinks = drinks;
+                toSavePizza.price += totalPrice(drinks);
+            }
+
+            // Add each updated pizza to the order
+            // Update overall insert order
+            insertOrder.totalPrice += toSavePizza.price;
+            insertOrder.totalQuantity += 1;
+            insertOrder.pizzas.push(toSavePizza);
+            
+            if(insertOrder.totalQuantity == orderPizzas.length){
+                res.json(insertOrder);
+            }
+        })
+    });
 });
 
 module.exports = router;
