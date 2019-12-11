@@ -119,6 +119,7 @@ if(err){
 FUNCTION NAME: updateCrustSize
 INPUTS: orderedPizza(object)
 OUTPUTS: crustSize(object)
+AUTHOR: Michael Kyagulanyi
 */
 var updateCrustSize = (orderedPizza) => {
     return new Promise((resolve, reject) => {

@@ -51,9 +51,10 @@ router.post('/create', (req, res) => {
         )
         .spread((crust, sauces) => {
             // This promise only runs once for the whole loop
-            // Need to research about this
+            // To-do: Need to research about this
             console.log('Crust: ',crust);
             console.log('Sauces: ',sauces);
+
         });
     }); // End orderPizzas.forEach i.e updating @ pizza
      

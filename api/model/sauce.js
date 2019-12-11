@@ -110,6 +110,7 @@ var Sauce = mongoose.model('Sauce', sauceSchema);
 FUNCTION NAME: updateSauce
 INPUTS: orderedPizza(object)
 OUTPUTS: toSaveSaucesOptions(array)
+AUTHOR: Michael Kyagulanyi
 */
 var updateSauce = (orderPizza) => {
     return new Promise((resolve, reject) => {
