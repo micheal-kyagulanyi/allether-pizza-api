@@ -40,7 +40,7 @@ router.post('/create', (req, res) => {
      // Global variable to hold all the pizzas on the order        
     toSavePizzas = [];
     
-    orderPizzas.forEach(pizza => {
+    /* orderPizzas.forEach(pizza => {
         Promise.all(
             [
                 updateCrustSize(pizza),
@@ -94,14 +94,19 @@ router.post('/create', (req, res) => {
             // Add each updated pizza to the order
             // Update overall insert order
             insertOrder.totalPrice += toSavePizza.price;
+            
             insertOrder.totalQuantity += 1;
             insertOrder.pizzas.push(toSavePizza);
             
             if(insertOrder.totalQuantity == orderPizzas.length){
+                var cleanedPrice = insertOrder.totalQuantity.toFixed(2);
+                console.log(cleanedPrice);
                 res.json(insertOrder);
             }
         })
-    });
+    }); */
+
+    
 });
 
 module.exports = router;
