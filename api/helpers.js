@@ -35,19 +35,27 @@ var getSum = (list) => {
 var paginatedResults = (model) => {
     return async (req, res, next) => {
         // Get page
-        const PAGE = parseInt(req.query.page);
-        const LIMIT = parseInt(req.query.limit);
+        const PAGE = parseInt(req.query.page) || 0;
+        const LIMIT = parseInt(req.query.limit) || 0;
         const FIELD = req.query.field;
         const ORDER = parseInt(req.query.order)
 
         // Our databese list is always indexed starting at 0
         const STARTINDEX = (PAGE - 1) * LIMIT;
-        const ENDINDEX = PAGE * LIMIT;
+        const ENDINDEX = PAGE * LIMIT
+        var totalRecords;
+
+        // Get the total number of records
+        await model.countDocuments({}, (err, count) => {
+            if(!err){
+                totalRecords = count;
+            }
+        });
 
         const RESULTS = {};
 
         // Do we have a next page
-        if(ENDINDEX <  model.length){
+        if(ENDINDEX <  totalRecords && PAGE != 0){
             RESULTS.next = {
                 page: PAGE + 1,
                 limit: LIMIT
