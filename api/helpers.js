@@ -43,19 +43,18 @@ var paginatedResults = (model) => {
         // Our databese list is always indexed starting at 0
         const STARTINDEX = (PAGE - 1) * LIMIT;
         const ENDINDEX = PAGE * LIMIT
-        var totalRecords;
-
+        
         // Get the total number of records
-        await model.countDocuments({}, (err, count) => {
+        const TOTALRECORDS = await model.countDocuments({}, (err, count) => {
             if(!err){
-                totalRecords = count;
+                return count;
             }
         });
 
         const RESULTS = {};
 
         // Do we have a next page
-        if(ENDINDEX <  totalRecords && PAGE != 0){
+        if(ENDINDEX <  TOTALRECORDS && PAGE != 0){
             RESULTS.next = {
                 page: PAGE + 1,
                 limit: LIMIT
