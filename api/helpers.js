@@ -37,6 +37,8 @@ var paginatedResults = (model) => {
         // Get page
         const PAGE = parseInt(req.query.page);
         const LIMIT = parseInt(req.query.limit);
+        const FIELD = req.query.field;
+        const ORDER = parseInt(req.query.order)
 
         // Our databese list is always indexed starting at 0
         const STARTINDEX = (PAGE - 1) * LIMIT;
@@ -61,7 +63,8 @@ var paginatedResults = (model) => {
         }
 
         try{
-            RESULTS.results = await model.find().limit(LIMIT).skip(STARTINDEX);
+            RESULTS.results = await model.find().limit(LIMIT).skip(STARTINDEX)
+            .sort({FIELD: ORDER});
             res.paginatedResults = RESULTS;
         } catch(e){
             res.status(500).json({messsage: e.message});
