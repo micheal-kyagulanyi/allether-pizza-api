@@ -42,7 +42,7 @@ var paginatedResults = (model) => {
 
         // Our databese list is always indexed starting at 0
         const STARTINDEX = (PAGE - 1) * LIMIT;
-        const ENDINDEX = LIMIT;
+        const ENDINDEX = PAGE * LIMIT;
 
         const RESULTS = {};
 
