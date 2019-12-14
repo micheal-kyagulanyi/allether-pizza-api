@@ -30,9 +30,53 @@ var getSum = (list) => {
 };
 
 
+// Set up our middleware for express js to help paginate
+// results
+var paginatedResults = (model) => {
+    return async (req, res, next) => {
+        // Get page
+        const PAGE = parseInt(req.query.page);
+        const LIMIT = parseInt(req.query.limit);
+
+        // Our databese list is always indexed starting at 0
+        const STARTINDEX = (PAGE - 1) * LIMIT;
+        const ENDINDEX = LIMIT;
+
+        const RESULTS = {};
+
+        // Do we have a next page
+        if(ENDINDEX <  model.length){
+            RESULTS.next = {
+                page: PAGE + 1,
+                limit: LIMIT
+            }
+        }
+
+        // Do we have a previous page
+        if(STARTINDEX > 0){
+            RESULTS.previous = {
+                page: PAGE - 1,
+                limit: LIMIT
+            }
+        }
+
+        try{
+            RESULTS.results = await model.find().limit(LIMIT).skip(STARTINDEX);
+            res.paginatedResults = RESULTS;
+        } catch(e){
+            res.status(500).json({messsage: e.message});
+        }
+            
+
+        
+
+        next();
+    }
+}
 
 
 module.exports = {
    totalCal,
-   totalPrice
+   totalPrice,
+   paginatedResults
 };

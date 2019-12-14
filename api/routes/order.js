@@ -9,19 +9,14 @@ var {updatedFlavoredCrusts} = require('./../model/flavoredcrust');
 var {updatedSauces} = require('./../model/sauce');
 var {updatedDrinks} = require('./../model/drink');
 var {updatedToppings} = require('./../model/topping');
-var {totalCal, totalPrice} = require('./../helpers');
+var {totalCal, totalPrice, paginatedResults} = require('./../helpers');
 
-router.get('/', (req, res) => {
-    // List the orders
-    Order.find({}).then(
-        (orders) => {
-            res.send(orders);
-        }
-    );
+router.get('/orders', paginatedResults(Order), (req, res) => {
+   res.json(res.paginatedResults);
 });
 
 
-router.post('/create', (req, res) => {
+router.post('/order/create', (req, res) => {
     // Create order
     var insertOrder = {};
     //insertOrder._id = new ObjectID();
@@ -55,7 +50,7 @@ router.post('/create', (req, res) => {
                     ]
                 )
                 .spread(
-                    (crust, meats,toppings, sauces, drinks, crusts) => {
+                    (crustSize, meats, otherToppings, sauceOptions, drinks, flavoredCrusts) => {
                     // Update this pizza's info
     
                     // Update toSavePizza with updated info
@@ -64,11 +59,11 @@ router.post('/create', (req, res) => {
                     toSavePizza.calCount = 0;
 
                     toSavePizza.cookOptions = pizza.cookOptions;
-    
-                    if(crust !== undefined){
-                        toSavePizza.updateCrustSize = crust;
-                        toSavePizza.price += crust.price;
-                        toSavePizza.calCount += crust.calCount;
+                    
+                    if(crustSize !== undefined){
+                        toSavePizza.updateCrustSize = crustSize;
+                        toSavePizza.price += crustSize.price;
+                        toSavePizza.calCount += crustSize.calCount;
                     } 
     
                     if(meats.length > 0){
@@ -77,16 +72,16 @@ router.post('/create', (req, res) => {
                         toSavePizza.calCount += totalCal(meats);
                     }
     
-                    if(toppings.length > 0){
-                        toSavePizza.otherToppings = toppings;
-                        toSavePizza.price += totalPrice(toppings);
-                        toSavePizza.calCount += totalCal(toppings);
+                    if(otherToppings.length > 0){
+                        toSavePizza.otherToppings = otherToppings;
+                        toSavePizza.price += totalPrice(otherToppings);
+                        toSavePizza.calCount += totalCal(otherToppings);
                     }
     
-                    if(sauces.length > 0){
-                        toSavePizza.sauceOptions = sauces;
-                        toSavePizza.price += totalPrice(sauces);
-                        toSavePizza.calCount += totalCal(sauces);
+                    if(sauceOptions.length > 0){
+                        toSavePizza.sauceOptions = sauceOptions;
+                        toSavePizza.price += totalPrice(sauceOptions);
+                        toSavePizza.calCount += totalCal(sauceOptions);
                     }
     
                     if(drinks.length > 0){
@@ -94,14 +89,15 @@ router.post('/create', (req, res) => {
                         toSavePizza.price += totalPrice(drinks);
                     }
     
-                    if(crusts.length > 0){
-                        toSavePizza.sauceOptions = crusts;
-                        toSavePizza.price += totalPrice(crusts);
-                        toSavePizza.calCount += totalCal(crusts);
+                    if(flavoredCrusts.length > 0){
+                        toSavePizza.flavoredCrusts = flavoredCrusts;
+                        toSavePizza.price += totalPrice(flavoredCrusts);
+                        toSavePizza.calCount += totalCal(flavoredCrusts);
                     }
+
+                    // Push each updated pizza's promise to the array
                     resolve(toSavePizza);
-                }
-                ); 
+                }); 
             }
         );
     })
@@ -112,7 +108,6 @@ router.post('/create', (req, res) => {
             insertOrder.pizzas.push(pizza);
             insertOrder.totalQuantity += 1;
         });
-
         // Create Order in the DB
         Order.create(insertOrder, (err, createdOrder) => {
             if(err){

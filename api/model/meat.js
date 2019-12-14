@@ -31,9 +31,6 @@ var meatSchema = new Schema(
 var Meat = mongoose.model('Meat', meatSchema);
 
 
-
-
-
 // This function takes in a meat object 
 // and returns an updated meat object with DB info
 var updateMeat = (orderMeat) => {
