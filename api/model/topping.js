@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-
 const {Promise} = require('bluebird');
+
 const {db} = require('../db/database');
 
 
@@ -27,30 +27,8 @@ var toppingSchema = new Schema(
         ]
     }
 );
-
-
 // Create the Topping Model
 var Topping = mongoose.model('Topping', toppingSchema);
-
-
-// Test data for the list
-var orderToppings = [
-    {
-      "spread": "Half",
-      "amount": "Lite",
-      "name": "Feta"
-    },
-    {
-        "spread": "Half",
-        "amount": "Lite",
-        "name": "Feta"
-    },
-    {
-        "spread": "Half",
-        "amount": "Lite",
-        "name": "Feta"
-    }
-];
 
 // This function takes in a topping object 
 // and returns an updated topping object with DB info
@@ -84,15 +62,29 @@ var updateTopping = (orderTopping) => {
     });
 };
 
-// Gets us all the toppings detail
-var updatedToppings = ((toppingsList) => {
-    Promise.map(toppingsList, updateTopping)
-    .then((results) => {
-        console.log('Our updated toppings using promise.map and a callback list');
-        console.log('------------------------------------------------------------------');
-        console.log(results);
-    });
-})(orderToppings); // Execute this script in node i.e :
+// This function uses Promises.map() to return us
+// a list of all the updated toppings or
+// an empty list if we don't have toppings
+var updatedToppings = (toppingsList) => {
+    return new Promise(
+        (resolve, reject) => {
+            // If we don't have toppings
+            if(toppingsList === undefined){
+                // Return an empty list
+                resolve([]);
+            } else {
+                Promise.map(toppingsList, updateTopping)
+                .then((toppings) => {
+                    // Resolve with updated toppings
+                    resolve(toppings);
+                }
+                , (err) => {
+                    reject(err);
+                });
+            }
+        }
+    );    
+}; 
 
 module.exports = {
     updatedToppings

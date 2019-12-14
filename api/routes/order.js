@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
-var {ObjectID} = require('mongodb');
 const {Promise} = require('bluebird');
 
 var {Order} = require('./../model/order');
 var {updateCrustSize} = require('./../model/crustsize');
-var {updateMeat} = require('./../model/meat');
-var {updateFlavoredCrust} = require('./../model/flavoredcrust');
-var {updateSauce} = require('./../model/sauce');
-var {updateDrink} = require('./../model/drink');
-var {updateOtherTopping} = require('./../model/topping');
+var {updatedMeats} = require('./../model/meat');
+var {updatedFlavoredCrusts} = require('./../model/flavoredcrust');
+var {updatedSauces} = require('./../model/sauce');
+var {updatedDrinks} = require('./../model/drink');
+var {updatedToppings} = require('./../model/topping');
 var {totalCal, totalPrice} = require('./../helpers');
 
 router.get('/', (req, res) => {
@@ -35,78 +34,93 @@ router.post('/create', (req, res) => {
     insertOrder.pizzas = [];
 
     // Process all the pizzas from the incoming order
-    var orderPizzas = new Array();
+    var orderPizzas = [];
     orderPizzas = req.body.pizzas;
      // Global variable to hold all the pizzas on the order        
     toSavePizzas = [];
+
+
+    Promise.map(orderPizzas, (pizza) => {
+        // Process each pizza
+        return new Promise(
+            (resolve, reject) => {
+                Promise.all(
+                    [
+                        updateCrustSize(pizza),
+                        updatedMeats(pizza.meats),
+                        updatedToppings(pizza.otherToppings),
+                        updatedSauces(pizza.sauceOptions),
+                        updatedDrinks(pizza.drinks),
+                        updatedFlavoredCrusts(pizza.flavoredCrusts)
+                    ]
+                )
+                .spread(
+                    (crust, meats,toppings, sauces, drinks, crusts) => {
+                    // Update this pizza's info
     
-    /* orderPizzas.forEach(pizza => {
-        Promise.all(
-            [
-                updateCrustSize(pizza),
-                updateSauce(pizza),
-                updateMeat(pizza),
-                updateFlavoredCrust(pizza),
-                updateOtherTopping(pizza),
-                updateDrink(pizza)
-            ])
-        .spread((crust, sauces, meats, flavoredCrusts, otherToppings, drinks) => {
-            // Update toSavePizza with updated info
-            var toSavePizza = {};
-            toSavePizza.price = 0;
-            toSavePizza.calCount = 0;
+                    // Update toSavePizza with updated info
+                    var toSavePizza = {};
+                    toSavePizza.price = 0;
+                    toSavePizza.calCount = 0;
 
-            // Update cook options
-
-            if(crust !== undefined){
-                toSavePizza.updateCrustSize = crust;
-                toSavePizza.price += crust.price;
-                toSavePizza.calCount += crust.calCount;
-            } 
-
-            if(sauces.length > 0){
-                toSavePizza.sauceOptions = sauces;
+                    toSavePizza.cookOptions = pizza.cookOptions;
+    
+                    if(crust !== undefined){
+                        toSavePizza.updateCrustSize = crust;
+                        toSavePizza.price += crust.price;
+                        toSavePizza.calCount += crust.calCount;
+                    } 
+    
+                    if(meats.length > 0){
+                        toSavePizza.meats = meats; 
+                        toSavePizza.price += totalPrice(meats);
+                        toSavePizza.calCount += totalCal(meats);
+                    }
+    
+                    if(toppings.length > 0){
+                        toSavePizza.otherToppings = toppings;
+                        toSavePizza.price += totalPrice(toppings);
+                        toSavePizza.calCount += totalCal(toppings);
+                    }
+    
+                    if(sauces.length > 0){
+                        toSavePizza.sauceOptions = sauces;
+                        toSavePizza.price += totalPrice(sauces);
+                        toSavePizza.calCount += totalCal(sauces);
+                    }
+    
+                    if(drinks.length > 0){
+                        toSavePizza.drinks = drinks;
+                        toSavePizza.price += totalPrice(drinks);
+                    }
+    
+                    if(crusts.length > 0){
+                        toSavePizza.sauceOptions = crusts;
+                        toSavePizza.price += totalPrice(crusts);
+                        toSavePizza.calCount += totalCal(crusts);
+                    }
+                    resolve(toSavePizza);
+                }
+                ); 
             }
-
-            if(meats.length > 0){
-                toSavePizza.meats = meats; 
-                toSavePizza.price += totalPrice(meats);
-                toSavePizza.calCount += totalCal(meats);
-            }
-
-            if(flavoredCrusts.length > 0){
-                toSavePizza.flavoredCrusts = flavoredCrusts;
-                toSavePizza.price += totalPrice(flavoredCrusts);
-                toSavePizza.totalCal += totalCal(flavoredCrusts);
-            }
-
-            if(otherToppings.length > 0){
-                toSavePizza.otherToppings = otherToppings;
-                toSavePizza.price += totalPrice(otherToppings);
-                toSavePizza.calCount += totalCal(otherToppings);
-            }
-
-            if(drinks.length > 0){
-                toSavePizza.drinks = drinks;
-                toSavePizza.price += totalPrice(drinks);
-            }
-
-            // Add each updated pizza to the order
-            // Update overall insert order
-            insertOrder.totalPrice += toSavePizza.price;
-            
+        );
+    })
+    .then((updatedPizzas) => {
+        // Update the order with all the pizza info
+        updatedPizzas.forEach(pizza => {
+            insertOrder.totalPrice += pizza.price;
+            insertOrder.pizzas.push(pizza);
             insertOrder.totalQuantity += 1;
-            insertOrder.pizzas.push(toSavePizza);
-            
-            if(insertOrder.totalQuantity == orderPizzas.length){
-                var cleanedPrice = insertOrder.totalQuantity.toFixed(2);
-                console.log(cleanedPrice);
-                res.json(insertOrder);
-            }
-        })
-    }); */
+        });
 
-    
+        // Create Order in the DB
+        Order.create(insertOrder, (err, createdOrder) => {
+            if(err){
+                return handleError(err);
+            }
+            res.json(createdOrder);
+        });
+    }); 
 });
 
 module.exports = router;
