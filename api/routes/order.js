@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+var {ObjectID} = require('mongodb');
 const {Promise} = require('bluebird');
 
 var {Order} = require('./../model/order');
@@ -12,7 +13,27 @@ var {updatedToppings} = require('./../model/topping');
 var {totalCal, totalPrice, paginatedResults} = require('./../helpers');
 
 router.get('/orders', paginatedResults(Order), (req, res) => {
-   res.json(res.paginatedResults);
+    res.json(res.paginatedResults);
+});
+
+router.get('/orders/:order_id', (req, res) => {
+    var order_id = req.params.order_id;
+    // Is the order_id valid
+    if(!ObjectID.isValid(order_id)){
+        return res.status(404).send();
+    }
+
+    Order.findById(order_id)
+    .then((Order) => {
+        // Does the order exist
+        if(!Order){
+            return res.status(404).send();
+        }
+        res.send({Order});
+    })
+    .catch((e) => {
+        res.status(400).send();
+    });
 });
 
 

@@ -75,11 +75,7 @@ var paginatedResults = (model) => {
             res.paginatedResults = RESULTS;
         } catch(e){
             res.status(500).json({messsage: e.message});
-        }
-            
-
-        
-
+        }    
         next();
     }
 }
