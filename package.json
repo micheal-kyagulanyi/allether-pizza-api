@@ -9,14 +9,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": "12.13.0"
+    "node": "12.14.0"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
+    "deepdash": "^4.3.2",
     "express": "^4.17.1",
+    "lodash": "^4.17.15",
     "mongodb": "^3.3.5",
     "mongoose": "^5.7.12"
   },

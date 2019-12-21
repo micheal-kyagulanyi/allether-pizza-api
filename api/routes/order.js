@@ -1,6 +1,9 @@
 const express = require('express');
+const _ = require('lodash');
+require('deepdash')(_); 
 const router = express.Router();
-var {ObjectID} = require('mongodb');
+
+const {ObjectID} = require('mongodb');
 const {Promise} = require('bluebird');
 
 var {Order} = require('./../model/order');
@@ -16,11 +19,11 @@ router.get('/orders', paginatedResults(Order), (req, res) => {
     res.json(res.paginatedResults);
 });
 
-router.get('/orders/:order_id', (req, res) => {
+router.get('/order/:order_id', (req, res) => {
     var order_id = req.params.order_id;
     // Is the order_id valid
     if(!ObjectID.isValid(order_id)){
-        return res.status(404).send();
+        return res.status(400).send();
     }
 
     Order.findById(order_id)
@@ -41,7 +44,7 @@ router.post('/order/create', (req, res) => {
     // Create order
     var insertOrder = {};
     //insertOrder._id = new ObjectID();
-    insertOrder.name = req.body.name;
+    insertOrder.orderName = req.body.name;
     insertOrder.ipAddress = req.connection.remoteAddress;
     insertOrder.orderTime = Date.now();
     insertOrder.deliveryStatus = req.body.deliveryStatus;
@@ -54,7 +57,6 @@ router.post('/order/create', (req, res) => {
     orderPizzas = req.body.pizzas;
      // Global variable to hold all the pizzas on the order        
     toSavePizzas = [];
-
 
     Promise.map(orderPizzas, (pizza) => {
         // Process each pizza
@@ -82,7 +84,7 @@ router.post('/order/create', (req, res) => {
                     toSavePizza.cookOptions = pizza.cookOptions;
                     
                     if(crustSize !== undefined){
-                        toSavePizza.updateCrustSize = crustSize;
+                        toSavePizza.crustSize = crustSize;
                         toSavePizza.price += crustSize.price;
                         toSavePizza.calCount += crustSize.calCount;
                     } 
@@ -137,6 +139,22 @@ router.post('/order/create', (req, res) => {
             res.json(createdOrder);
         });
     }); 
+});
+
+router.patch('/order/:order_id/update', (req, res) => {
+    var order_id = req.params.order_id;
+
+    console.log(JSON.stringify(req.body, undefined, 2));
+    var body = _.pickDeep(req.body, 
+        [
+            'pizzas','name', 'size', 'amount', 'spread',
+            'otherToppings', 'crustSize', 'meats', 'sauceOptions',
+            'flavoredCrusts', 'cookOptions'
+        ]);
+
+        if(!ObjectID.isValid(order_id)){
+            return res.status(404).send();
+        }
 });
 
 module.exports = router;

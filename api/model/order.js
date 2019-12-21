@@ -147,7 +147,7 @@ var pizzaSchema = new Schema(
 // Create Order Schema
 var orderSchema = new Schema(
     {
-        name: {
+        orderName: {
             type: String
         },
         ipAddress: {

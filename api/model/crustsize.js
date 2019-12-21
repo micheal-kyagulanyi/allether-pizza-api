@@ -23,7 +23,6 @@ var crustSizeSchema = new Schema(
 // Create the Crust Model
 var CrustSize = mongoose.model('CrustSize', crustSizeSchema);
 
-
 var updateCrustSize = (orderedPizza) => {
     return new Promise((resolve, reject) => {
         var crustSize = {};
