@@ -83,7 +83,6 @@ router.post('/order/create', (req, res) => {
                     toSavePizza.cookOptions = pizza.cookOptions;
                     
                     if(crustSize !== undefined){
-                        console.log(crustSize);
                         // Is the error propery set
                         if(crustSize.error){
                             return res.status(404).send({crustSize});
@@ -125,7 +124,7 @@ router.post('/order/create', (req, res) => {
                     }
     
                     if(sauceOptions.length > 0){
-                        // Check if there is any error in the meats list
+                        // Check if there is any error in the sauces list
                         const sauceOptionErr = sauceOptions.find((item) => {
                             return item.error !== undefined;
                         });
@@ -140,7 +139,7 @@ router.post('/order/create', (req, res) => {
                     }
     
                     if(drinks.length > 0){
-                         // Check if there is any error in the meats list
+                         // Check if there is any error in the drinks list
                          const drinkErr = drinks.some((item) => {
                             return item.error !== undefined;
                         });
@@ -154,7 +153,7 @@ router.post('/order/create', (req, res) => {
                     }
     
                     if(flavoredCrusts.length > 0){
-                         // Check if there is any error in the meats list
+                         // Check if there is any error in the flavored crust list
                          const flavoredCrustErr = flavoredCrusts.some((item) => {
                             return item.error !== undefined;
                         });
@@ -168,8 +167,6 @@ router.post('/order/create', (req, res) => {
                     }
 
                     // Push each updated pizza's promise to the array
-                    console.log(toSavePizza);
-                    console.log('----------------End Pizza------------------------------');
                     resolve(toSavePizza);
                 }); 
             }
@@ -293,7 +290,7 @@ router.patch('/order/:order_id/update', (req, res) => {
                     }
     
                     if(sauceOptions.length > 0){
-                        // Check if there is any error in the meats list
+                        // Check if there is any error in the sauces list
                         const sauceOptionErr = sauceOptions.find((item) => {
                             return item.error !== undefined;
                         });
@@ -308,7 +305,7 @@ router.patch('/order/:order_id/update', (req, res) => {
                     }
     
                     if(drinks.length > 0){
-                         // Check if there is any error in the meats list
+                         // Check if there is any error in the drink list
                          const drinkErr = drinks.some((item) => {
                             return item.error !== undefined;
                         });
@@ -322,7 +319,7 @@ router.patch('/order/:order_id/update', (req, res) => {
                     }
     
                     if(flavoredCrusts.length > 0){
-                         // Check if there is any error in the meats list
+                         // Check if there is any error in the flavored crust list
                          const flavoredCrustErr = flavoredCrusts.some((item) => {
                             return item.error !== undefined;
                         });
