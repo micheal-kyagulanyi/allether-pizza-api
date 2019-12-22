@@ -30,23 +30,38 @@ var updateCrustSize = (orderedPizza) => {
             // Try getting crust from the DB
             CrustSize.findOne({name: orderedPizza.crustSize.name}).then(
                 // Found the crust
-                (crust) => {
-                    // Get this crust size name
-                    var crustInfo = crust.sizes.find((size) => {
+                (dbCrust) => {
+                    // Handle non DB existing crust
+                    if(dbCrust === null){
+                        throw new Error(`${orderedPizza.crustSize.name} is not a valid crust name`);
+                    }
+
+                    //Get this crust's details
+                    var crustInfo = {}
+                    crustInfo = dbCrust.sizes.find((size) => {
                         return size.name === orderedPizza.crustSize.size;
                     });
+                    
+                    // Handle non existing crust details
+                    if(crustInfo === undefined){
+                        throw new Error(`${orderedPizza.crustSize.size} is not a valid size`);
+                    }
+                   
                     // Update this crust info
-                    crustSize.name = crust.name;
+                    crustSize.name = dbCrust.name;
                     crustSize.size = crustInfo.name;
                     crustSize.price = crustInfo.price;
                     crustSize.slices = crustInfo.slices;
                     crustSize.calCount = crustInfo.calCount;
                     resolve(crustSize);
-                }, (err) => {
-                    reject('Could not find the crust',err);
-                }
-            );
+                })
+                .catch((e) => {
+                   crustSize.error = e.message;
+                   // Send back crust with error message
+                   resolve(crustSize);
+                });
         } else {
+            // Send back empty crust
             resolve(crustSize);
         }
     });

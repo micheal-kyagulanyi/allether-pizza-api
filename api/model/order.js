@@ -104,15 +104,15 @@ var pizzaSchema = new Schema(
                     type: String,
                 },
                 spread: {
-                     type: String,
-                     default: 'Half'
+                    type: String,
+                    default: 'Half'
                  },
                  amount: {
-                     type: String,
-                     default: 'Lite'
+                    type: String,
+                    default: 'Lite'
                  },
                  calCount: {
-                     type: Number
+                    type: Number
                  }
             }
         ],

@@ -37,25 +37,43 @@ var updateFlavoredCrust = (flavoredCrust) => {
         // Try finding flavored crust from the DB
         FlavoredCrust.findOne({name: flavoredCrust.name})
         .then((dbFlavoredCrust) => {
+            // Validate flavored crust
+            if(dbFlavoredCrust === null){
+                throw new Error( `${flavoredCrust.name} is not a valid flavored crust name`);
+            }
             // Find flavored from order flavored crusts
             // Update toSaveFlavoredCrust
             toSaveFlavoredCrust.name = dbFlavoredCrust.name;
-            var dbSpread = dbMeat.spreads.find((spread) => {
+            var dbSpread = {};
+            dbSpread = dbFlavoredCrust.spreads.find((spread) => {
                 return spread.name === flavoredCrust.amount;
             }); 
-
+            // Validate spread
+            if(dbSpread === undefined){
+                throw new Error( `${flavoredCrust.amount} is not a valid flavored crust amount`);
+            }
             toSaveFlavoredCrust.amount = dbSpread.name;
-            var amountsDetail = dbSpread.amounts.find((amount) => {
+
+            var amountsDetail = {};
+            amountsDetail = dbSpread.amounts.find((amount) => {
                 return amount.name === flavoredCrust.spread;
             });
-            toSaveFlavoredCrust.spread = amountsDetail.name;
-            toSaveFlavoredCrust = amountsDetail.cal;
-            toSaveFlavoredCrust.price = amountsDetail.price; 
+           
+            // Validate  amounts detail
+            if(amountsDetail === undefined){
+                throw new Error( `${flavoredCrust.spread} is not a valid flavored crust spread`);
+            }
 
+            toSaveFlavoredCrust.spread = amountsDetail.name;
+            toSaveFlavoredCrust.calCount = amountsDetail.cal;
+            toSaveFlavoredCrust.price = amountsDetail.price; 
+          
             resolve(toSaveFlavoredCrust);
-        },
-        (err) => {
-            resolve('Could not find flavored crust');
+        })
+        .catch((e) => {
+            toSaveFlavoredCrust.error = e.message;
+            // Send back flavored crust with error message
+            resolve(toSaveFlavoredCrust);
         });
     });
 }

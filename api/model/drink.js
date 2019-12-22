@@ -30,21 +30,33 @@ var updateDrink = (orderDrink) => {
         // Try finding meat from the DB
         Drink.findOne({name: orderDrink.name})
         .then((dbDrink) => {
+            // Validate drink i.e if the drink exists in the DB
+            if(dbDrink === null){
+                throw new Error( `${orderDrink.name} is not a valid drink name`);
+            }
             // Update to save drink
             toSaveDrink.name = dbDrink.name;
 
             // Get the drink's size details from the DB
-            var amountsDetail = dbDrink.sizes.find((size) => {
+            var amountsDetail = {};
+            amountsDetail = dbDrink.sizes.find((size) => {
                 return size.name === orderDrink.size;
             });
+
+            // Validate amounts detail
+            if(amountsDetail === undefined){
+                throw new Error( `${orderDrink.size} is not a valid drink size`);
+            }
 
             // Update drink with this DB info
             toSaveDrink.size = amountsDetail.name;
             toSaveDrink.price = amountsDetail.price;
             resolve(toSaveDrink);
-        },
-        (err) => {
-            resolve('Could not find drink');
+        })
+        .catch((e) => {
+            toSaveDrink.error = e.message;
+            // Send back drink with error message
+            resolve(toSaveDrink);
         });
     });
 }

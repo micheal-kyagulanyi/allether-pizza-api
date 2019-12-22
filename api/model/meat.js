@@ -39,26 +39,43 @@ var updateMeat = (orderMeat) => {
         // Try finding meat from the DB
         Meat.findOne({name: orderMeat.name})
         .then((dbMeat) => {
+            // Validate meat
+            if(dbMeat === null){
+                throw new Error( `${orderMeat.name} is not a valid meat name`);
+            }
             // Update the meat with DB data
             toSaveMeat.name = dbMeat.name;
             // Get spread details from the DB
-            var dbSpread = dbMeat.spreads.find(
+            var dbSpread = {}
+            dbSpread = dbMeat.spreads.find(
                 (spread) =>{
                     return spread.name === orderMeat.amount;
                 } 
             );
+            // Validate spread
+            if(dbSpread === undefined){
+                throw new Error( `${orderMeat.amount} is not a valid meat amount`);
+            }
             toSaveMeat.amount = dbSpread.name;
             // Get spread details from the DB
-            var amountsDetail = dbSpread.amounts.find((amount) => {
+            var amountsDetail = {}
+            amountsDetail = dbSpread.amounts.find((amount) => {
                 return amount.name === orderMeat.spread;
             });
+
+            if(amountsDetail === undefined){
+                throw new Error( `${orderMeat.spread} is not a valid meat spread`);
+            }
             toSaveMeat.spread = amountsDetail.name;
             toSaveMeat.calCount = amountsDetail.cal;
             toSaveMeat.price = amountsDetail.price; 
             resolve(toSaveMeat);
-        },(dbError) => {
-            reject(dbError);
         })
+        .catch((e) => {
+            toSaveMeat.error = e.message;
+            // Send back meat with error message
+            resolve(toSaveMeat);
+        });
     });
 };
 

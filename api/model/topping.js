@@ -39,25 +39,45 @@ var updateTopping = (orderTopping) => {
         // Get topping from the DB
         Topping.findOne({name: orderTopping.name})
         .then((dbTopping) => {
+            // Handle non existing topping
+            if(dbTopping === null){
+                throw new Error( `${orderTopping.name} is not a valid topping name`);
+            }
             // Update the topping with DB data
             toSaveTopping.name = dbTopping.name;
             // Get spread details from the DB
-            var dbSpread = dbTopping.spreads.find(
+            var dbSpread = {};
+            dbSpread = dbTopping.spreads.find(
                 (spread) =>{
                     return spread.name === orderTopping.amount;
                 } 
             );
+
+            // Handle non existing spread
+            if(dbSpread === undefined){
+                throw new Error(`${orderTopping.amount} is not a valid topping amount`);
+            }
+
             toSaveTopping.amount = dbSpread.name;
             // Get spread details from the DB
-            var amountsDetail = dbSpread.amounts.find((amount) => {
+            var amountsDetail = {};
+            amountsDetail = dbSpread.amounts.find((amount) => {
                 return amount.name === orderTopping.spread;
             });
+
+            // Handle non existing details
+            if(amountsDetail === undefined){
+                throw new Error(`<${orderTopping.spread}> is not a valid topping spread`);
+            }
+
             toSaveTopping.spread = amountsDetail.name;
             toSaveTopping.calCount = amountsDetail.cal;
             toSaveTopping.price = amountsDetail.price; 
             resolve(toSaveTopping);
-        },(dbError) => {
-            reject(dbError);
+        })
+        .catch((e) => {
+            toSaveTopping.error = e.message;
+            resolve(toSaveTopping);
         })
     });
 };
@@ -85,9 +105,6 @@ var updatedToppings = (toppingsList) => {
         }
     );    
 }; 
-
-
-
 
 module.exports = {
     updatedToppings

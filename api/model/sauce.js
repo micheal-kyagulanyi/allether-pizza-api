@@ -30,103 +30,47 @@ var sauceSchema = new Schema(
 // Create the Crust Model
 var Sauce = mongoose.model('Sauce', sauceSchema);
 
-// Populate a few sources into DB
-var sauces = [
-    {
-        name: 'Mozzarella',
-        spreads: [
-            {
-                name: 'Lite', 
-                amounts: [
-                    {name: 'Half', cal: 11, price: 0},
-                    {name: 'Full', cal: 23, price: 0}
-                ]
-            },
-
-            {
-                name: 'Normal', 
-                amounts: [
-                    {name: 'Half', cal: 23, price: 0},
-                    {name: 'Full', cal: 45, price: 0}
-                ]
-            },
-
-            {
-                name: 'Extra', 
-                amounts: [
-                    {name: 'Half', cal: 45, price: 0},
-                    {name: 'Full', cal: 90, price: 1.75}
-                ]
-            },
-
-            
-            {
-                name: 'x3', 
-                amounts: [
-                    {name: 'Half', cal: 68, price: 0.88},
-                    {name: 'Full', cal: 135, price: 3.50}
-                ]
-            },
-        ]
-    },
-
-    {
-        name: 'Pizza Source',
-        spreads: [
-            {
-                name: 'Lite', 
-                amounts: [
-                    {name: 'Full', cal: 5, price: 0}
-                ]
-            },
-
-            {
-                name: 'Normal', 
-                amounts: [
-                    {name: 'Full', cal: 10, price: 0}
-                ]
-            },
-
-            {
-                name: 'Extra', 
-                amounts: [
-                    {name: 'Full', cal: 20, price: 0}
-                ]
-            },
-        ]
-    }
-];
-
-
-Sauce.insertMany(sauces, (err) => {
-    if(err){
-        console.log(err);
-    }
-});
-
 var updateSauce = (orderSauce) => {
     return new Promise((resolve, reject) => {  
         var toSaveSauce = {};
         Sauce.findOne({name: orderSauce.name})
         .then((dbSauce) => {
-        
+            // Validate if DB sauce exists
+            if(dbSauce === null){
+                throw new Error( `${orderSauce.name} is not a valid sauce name`);
+            }
             toSaveSauce.name = dbSauce.name;
-            var dbSpread = dbSauce.spreads.find((spread) => {
+
+            var dbSpread = {};
+            dbSpread = dbSauce.spreads.find((spread) => {
                 return spread.name === orderSauce.amount;
             }); 
 
+            // Validate spread
+            if(dbSpread === undefined){
+                throw new Error( `${orderSauce.amount} is not a valid sauce amount`);
+            }
+
             toSaveSauce.amount = dbSpread.name;
+            var amountsDetail = {};
             var amountsDetail = dbSpread.amounts.find((amount) => {
                 return amount.name === orderSauce.spread || orderSauce.spread === 'None';
             });
+
+            // Validate amount details
+            if(amountsDetail === undefined){
+                throw new Error( `${orderSauce.spread} is not a valid sauce spread`);
+            }
             toSaveSauce.spread = amountsDetail.name;
             toSaveSauce.calCount = amountsDetail.cal;
             toSaveSauce.price = amountsDetail.price; 
 
             resolve(toSaveSauce);
-        },
-        (err) => {
-            resolve('DB error', err);
+        })
+        .catch((e) => {
+            toSaveSauce.error = e.message;
+            // Send back sauce with error message
+            resolve(toSaveSauce);
         }); 
     });
 };
