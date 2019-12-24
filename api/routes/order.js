@@ -11,6 +11,9 @@ var orderController = require('./../controllers/orderController');
 // GET:  Display list of paginated orders
 router.get('/orders', paginatedResults(Order), orderController.getAllOrders);
 
+// GET: Display orders stats
+router.get('/stats', orderController.getAllOrdersStats);
+
 // GET: Display a specific order by _id
 router.get('/order/:order_id', orderController.getOrderById);
 

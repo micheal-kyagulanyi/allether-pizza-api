@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 var {ObjectID} = require('mongodb');
 
-const {db} = require('../db/database');
+
+//const {db} = require('../db/database');
 
 // Setup my database
 var Schema = mongoose.Schema;

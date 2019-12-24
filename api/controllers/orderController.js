@@ -22,6 +22,105 @@ exports.getAllOrders = (req, res) => {
 };
 
 
+// A promise that returns total number of orders
+var totalOrders = () => {
+    return new Promise((resolve, reject) => {
+        Order.estimatedDocumentCount({}, (err, count) => {
+            if(!err){
+                resolve(count);
+            } else{
+                resolve(0);
+            }
+        });
+    });
+};
+
+
+// A promise that returns total number of orders
+var totalOrdersToday = () => {
+    return new Promise((resolve, reject) => {
+        Order.countDocuments({orderTime: {$eq: new Date().getDay()}} , (err, count) => {
+            if(!err){
+                resolve(count);
+            } else{
+                resolve(0);
+            }
+        });
+    });
+};
+
+
+// A promise that returns total number of pizzas
+var totalPizzas = () => {
+    return new Promise((resolve, reject) => {
+        Order.aggregate([
+            {
+                $group: {
+                    _id: "", // Creates one group fo all documents
+                    total: {$sum: "$totalQuantity"}
+                }
+            }
+        ], (err, result) => {
+           if(!err){
+               resolve(result[0].total);
+           } else {
+               resolve(0);
+           }
+        });
+    });
+};
+
+// Get popular topping
+var popularItem = (fieldName) => {
+    return new Promise((resolve, reject) => {
+        Order.aggregate([
+            {
+                $group: {
+                     // Group by topping name
+                    _id: `$pizzas.${fieldName}.name`,
+                    // Get total records in each group
+                    total: {$sum: 1}
+                },
+            },
+            // Sort the records on total in descending order
+            {$sort: {"total": -1}}
+        ], (err, result) => {
+            if(!err){
+                // Get the top record of the sorted list
+                //resolve(result[0]._id[0][0]);
+                var myResult = {};
+                myResult.name = result[0]._id[0][0];
+                myResult.total = result[0].total;
+                resolve(myResult);
+            }
+        });
+    });
+};
+
+// GET: Display orders stats
+exports.getAllOrdersStats = (req, res) => {
+    Promise.all([
+        totalOrders(),
+        totalPizzas(),
+        totalOrdersToday(),
+        popularItem('otherToppings'),
+        popularItem('meats')
+        ]).spread((allOrders, allPizzas, allOrdersToday, 
+            popularTopping, popularMeat) => {
+        var stats = {};
+        var all = {}
+        var today = {}
+        all.orders = allOrders;
+        all.pizzas = allPizzas;
+        all.popularTopping = popularTopping;
+        all.popularMeat = popularMeat;
+        stats.all = all;
+        today.all = allOrdersToday;
+        stats.today = today;
+        res.send({stats});
+    });
+};
+
 // GET: specific order by _id.
 exports.getOrderById = (req, res) => {
     var order_id = req.params.order_id;
@@ -46,7 +145,6 @@ exports.getOrderById = (req, res) => {
 // GET: specific order status by _id.
 exports.getOrderStatusById = (req, res) => {
     var order_id = req.params.order_id;
-
     // Is the order_id valid
     if(!ObjectID.isValid(order_id)){
         return res.status(400).send();
@@ -106,7 +204,6 @@ exports.createOrder = (req, res) => {
                     var toSavePizza = {};
                     toSavePizza.price = 0;
                     toSavePizza.calCount = 0;
-                    toSavePizza.slices = 0;
 
                     toSavePizza.cookOptions = pizza.cookOptions;
                     
@@ -118,7 +215,7 @@ exports.createOrder = (req, res) => {
                         toSavePizza.crustSize = crustSize;
                         toSavePizza.price += crustSize.price;
                         toSavePizza.calCount += crustSize.calCount;
-                        toSavePizza.slices += crustSize.slices;
+                        toSavePizza.slices = crustSize.slices;
                     } 
     
                     if(meats.length > 0){
