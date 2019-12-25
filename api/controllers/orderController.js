@@ -1,6 +1,7 @@
 // Get all require npm modules
 const {ObjectID} = require('mongodb');
 const {Promise} = require('bluebird');
+const dateFns = require('date-fns');
 const _ = require('lodash');
 require('deepdash')(_); 
 
@@ -39,7 +40,7 @@ var totalOrders = () => {
 // A promise that returns total number of orders
 var totalOrdersToday = () => {
     return new Promise((resolve, reject) => {
-        Order.countDocuments({orderTime: {$eq: new Date().getDay()}} , (err, count) => {
+        Order.countDocuments({"orderTime": {$lt: new Date()}} , (err, count) => {
             if(!err){
                 resolve(count);
             } else{
@@ -70,28 +71,41 @@ var totalPizzas = () => {
     });
 };
 
-// Get popular topping
+// Get popular item
 var popularItem = (fieldName) => {
+    // This filter only gets this category's documents where lists are not empty.
+    // It's wise doing it here than in the aggregation pipeline.
+    var matchFilterKey = `pizzas.${fieldName}`;
+    var matchFilter = {};
+    matchFilter[matchFilterKey] = {$ne: []}; 
     return new Promise((resolve, reject) => {
         Order.aggregate([
-            {
-                $group: {
-                     // Group by topping name
-                    _id: `$pizzas.${fieldName}.name`,
-                    // Get total records in each group
-                    total: {$sum: 1}
-                },
-            },
+            // This filters this item's empty lists
+            {$match: matchFilter}, 
+            // Stage1: unwind the top array
+            {$unwind: "$pizzas"},
+            // Stage2: Unwind the required item array
+            {$unwind: `$${matchFilterKey}`},
+            // Stage3: Group items by item name
+            {$group: {_id: `$${matchFilterKey}.name`, total: {$sum: 1}}},
             // Sort the records on total in descending order
             {$sort: {"total": -1}}
-        ], (err, result) => {
+        ], (err, results) => {
             if(!err){
                 // Get the top record of the sorted list
-                //resolve(result[0]._id[0][0]);
                 var myResult = {};
-                myResult.name = result[0]._id[0][0];
-                myResult.total = result[0].total;
-                resolve(myResult);
+                myResult.name = results[0]._id;
+                myResult.count = results[0].total;
+                // Compute items total
+                const itemsTotal = results.reduce(
+                    (sum, item) => {
+                        return sum + item.total;
+                    }, 0
+                );
+                const percent = (myResult.count/itemsTotal) * 100;
+                myResult.total = itemsTotal;
+                myResult.percentange = percent;
+                resolve(myResult);      
             }
         });
     });
@@ -104,16 +118,18 @@ exports.getAllOrdersStats = (req, res) => {
         totalPizzas(),
         totalOrdersToday(),
         popularItem('otherToppings'),
-        popularItem('meats')
+        popularItem('meats'),
+        popularItem('drinks')
         ]).spread((allOrders, allPizzas, allOrdersToday, 
-            popularTopping, popularMeat) => {
+            popularTopping, popularMeat, popularDrink) => {
         var stats = {};
         var all = {}
         var today = {}
-        all.orders = allOrders;
-        all.pizzas = allPizzas;
+        all.totalOrders = allOrders;
+        all.totalPizzas = allPizzas;
         all.popularTopping = popularTopping;
         all.popularMeat = popularMeat;
+        all.popularDrink = popularDrink;
         stats.all = all;
         today.all = allOrdersToday;
         stats.today = today;
