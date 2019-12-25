@@ -1,7 +1,7 @@
 // Get all require npm modules
 const {ObjectID} = require('mongodb');
 const {Promise} = require('bluebird');
-const dateFns = require('date-fns');
+const {startOfDay, subHours} = require('date-fns');
 const _ = require('lodash');
 require('deepdash')(_); 
 
@@ -39,8 +39,24 @@ var totalOrders = () => {
 
 // A promise that returns total number of orders
 var totalOrdersToday = () => {
+    var today = startOfDay(new Date());
     return new Promise((resolve, reject) => {
-        Order.countDocuments({"orderTime": {$lt: new Date()}} , (err, count) => {
+        Order.countDocuments({"orderTime": {$lt: today}} , (err, count) => {
+            if(!err){
+                resolve(count);
+            } else{
+                resolve(0);
+            }
+        });
+    });
+};
+
+
+// A promise that returns total number of orders
+var totalOrdersLastHour = () => {
+    var lastHour = subHours(new Date(),1);
+    return new Promise((resolve, reject) => {
+        Order.countDocuments({"orderTime": {$gt: lastHour}} , (err, count) => {
             if(!err){
                 resolve(count);
             } else{
@@ -117,10 +133,11 @@ exports.getAllOrdersStats = (req, res) => {
         totalOrders(),
         totalPizzas(),
         totalOrdersToday(),
+        totalOrdersLastHour(),
         popularItem('otherToppings'),
         popularItem('meats'),
         popularItem('drinks')
-        ]).spread((allOrders, allPizzas, allOrdersToday, 
+        ]).spread((allOrders, allPizzas, allOrdersToday, totalOrdersLastHour,
             popularTopping, popularMeat, popularDrink) => {
         var stats = {};
         var all = {}
@@ -132,6 +149,7 @@ exports.getAllOrdersStats = (req, res) => {
         all.popularDrink = popularDrink;
         stats.all = all;
         today.all = allOrdersToday;
+        today.lastHour = totalOrdersLastHour;
         stats.today = today;
         res.send({stats});
     });
