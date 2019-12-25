@@ -8,6 +8,11 @@ var {paginatedResults} = require('./../helpers');
 var {Order} = require('./../model/order');
 var orderController = require('./../controllers/orderController');
 
+// GET: Display welcom message
+router.get('/', (req, res) => {
+    res.send("Welcome");
+});
+
 // GET:  Display list of paginated orders
 router.get('/orders', paginatedResults(Order), orderController.getAllOrders);
 
