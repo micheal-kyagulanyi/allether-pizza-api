@@ -22,7 +22,6 @@ exports.getAllOrders = (req, res) => {
     res.json(res.paginatedResults);
 };
 
-
 // A promise that returns total number of orders
 var totalOrders = () => {
     return new Promise((resolve, reject) => {
