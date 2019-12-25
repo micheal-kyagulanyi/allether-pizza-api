@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
 router.get('/orders', paginatedResults(Order), orderController.getAllOrders);
 
 // GET: Display orders stats
-router.get('/stats', orderController.getAllOrdersStats);
+router.get('/orders/stats', orderController.getAllOrdersStats);
 
 // GET: Display a specific order by _id
 router.get('/order/:order_id', orderController.getOrderById);
