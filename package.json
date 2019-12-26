@@ -21,7 +21,8 @@
     "express": "^4.17.1",
     "lodash": "^4.17.15",
     "mongodb": "^3.3.5",
-    "mongoose": "^5.7.12"
+    "mongoose": "^5.7.12",
+    "node-cron": "^2.0.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
