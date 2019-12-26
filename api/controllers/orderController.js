@@ -126,16 +126,16 @@ var popularItem = (fieldName) => {
     });
 };
 
-// GET: Display orders stats
+// GET: Display all orders stats
 exports.getAllOrdersStats = (req, res) => {
     Promise.all([
         totalOrders(),
         totalPizzas(),
         totalOrdersToday(),
-        totalOrdersLastHour()/* ,
+        totalOrdersLastHour(),
         popularItem('otherToppings'),
         popularItem('meats'),
-        popularItem('drinks') */
+        popularItem('drinks')
         ]).spread((allOrders, allPizzas, allOrdersToday, totalOrdersLastHour,
             popularTopping, popularMeat, popularDrink) => {
         var stats = {};
