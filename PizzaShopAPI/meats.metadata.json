@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"PizzaShopAPI.meats"}],"uuid":"71446279c288408e9fe4cea009d5dcc7"}

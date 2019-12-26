@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"PizzaShopAPI.orders"}],"uuid":"bce35ef6d7724b7f985a6d70101dc730"}
