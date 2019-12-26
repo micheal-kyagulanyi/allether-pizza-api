@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const orderRoutes = require('./routes/order');
+const cronRoutes = require('./routes/cron');
 
 var app = express();
 // parse application/x-www-form-urlencoded
@@ -10,7 +11,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Routes
-app.use('/', orderRoutes);
+app.use('/orders', orderRoutes);
+app.use('/crons', cronRoutes);
 
 const port = process.env.PORT || 9000;
 
