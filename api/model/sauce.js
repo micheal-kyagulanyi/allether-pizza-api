@@ -27,7 +27,7 @@ var sauceSchema = new Schema(
     }
 );
 
-// Create the Crust Model
+// Create the Sauce Model
 var Sauce = mongoose.model('Sauce', sauceSchema);
 
 var updateSauce = (orderSauce) => {

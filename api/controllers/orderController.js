@@ -40,7 +40,7 @@ var totalOrders = () => {
 var totalOrdersToday = () => {
     var today = startOfDay(new Date());
     return new Promise((resolve, reject) => {
-        Order.countDocuments({"orderTime": {$lt: today}} , (err, count) => {
+        Order.countDocuments({"orderTime": {$gt: today}} , (err, count) => {
             if(!err){
                 resolve(count);
             } else{
