@@ -78,7 +78,7 @@ var paginatedResults = (model) => {
         }    
         next();
     }
-}
+};
 
 
 // A function to dynamically update an item
@@ -125,7 +125,7 @@ var updateItem = (item, res, toSavePizza) => {
         toSavePizza.price += totalPrice(item[itemName]);
     }
     
-}
+};
 
 
 module.exports = {
