@@ -15,7 +15,7 @@ var {updatedDrinks} = require('./../model/drink');
 var {updatedToppings} = require('./../model/topping');
 
 // Get all the helper functions
-var {totalCal, totalPrice, updateItem} = require('./../helpers');
+var {updateItem} = require('./../helpers');
 
 // GET: List all the orders and paginated
 exports.getAllOrders = (req, res) => {
