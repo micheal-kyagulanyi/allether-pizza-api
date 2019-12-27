@@ -15,7 +15,7 @@ var {updatedDrinks} = require('./../model/drink');
 var {updatedToppings} = require('./../model/topping');
 
 // Get all the helper functions
-var {totalCal, totalPrice} = require('./../helpers');
+var {totalCal, totalPrice, updateItem} = require('./../helpers');
 
 // GET: List all the orders and paginated
 exports.getAllOrders = (req, res) => {
@@ -95,7 +95,7 @@ var popularItem = (fieldName) => {
     matchFilter[matchFilterKey] = {$ne: []}; 
     return new Promise((resolve, reject) => {
         Order.aggregate([
-            // This filters this item's empty lists
+            // This filters out this item's empty lists
             {$match: matchFilter}, 
             // Stage1: unwind the top array
             {$unwind: "$pizzas"},
@@ -231,98 +231,27 @@ exports.createOrder = (req, res) => {
                 )
                 .spread(
                     (crustSize, meats, otherToppings, sauceOptions, drinks, flavoredCrusts) => {
-                    // Update this pizza's info
-    
-                    // Update toSavePizza with updated info
+                    /* 
+                      *  Update this pizza's info
+                      *  Update toSavePizza with updated info
+                    */
                     var toSavePizza = {};
                     toSavePizza.price = 0;
                     toSavePizza.calCount = 0;
 
                     toSavePizza.cookOptions = pizza.cookOptions;
+
+                    updateItem({crustSize}, res, toSavePizza);
+
+                    updateItem({meats}, res, toSavePizza);
+
+                    updateItem({otherToppings}, res, toSavePizza);
+
+                    updateItem({sauceOptions}, res, toSavePizza);
                     
-                    if(crustSize !== undefined){
-                        // Is the error propery set
-                        if(crustSize.error){
-                            return res.status(404).send({crustSize});
-                        }
-                        toSavePizza.crustSize = crustSize;
-                        toSavePizza.price += crustSize.price;
-                        toSavePizza.calCount += crustSize.calCount;
-                        toSavePizza.slices = crustSize.slices;
-                    } 
+                    updateItem({drinks}, res, toSavePizza);
     
-                    if(meats.length > 0){
-                        // Check if there is any error in the meats list
-                        const meatErr = meats.find((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(meatErr){
-                            // Send error back to the user
-                            return res.status(404).send({meatsErr});
-                        }
-                        toSavePizza.meats = meats; 
-                        toSavePizza.price += totalPrice(meats);
-                        toSavePizza.calCount += totalCal(meats);
-                    }
-    
-                    if(otherToppings.length > 0){
-                        // Check if there is any error in the toppings
-                        const otherToppingErr = otherToppings.find((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(otherToppingErr){
-                            // Display the err
-                            return res.status(404).send({otherToppingErr});
-                        }
-                        toSavePizza.otherToppings = otherToppings;
-                        toSavePizza.price += totalPrice(otherToppings);
-                        toSavePizza.calCount += totalCal(otherToppings);
-                    }
-    
-                    if(sauceOptions.length > 0){
-                        // Check if there is any error in the sauces list
-                        const sauceOptionErr = sauceOptions.find((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(sauceOptionErr){
-                            // Display the err
-                            return res.status(404).send({sauceOptionErr});
-                        }
-                        toSavePizza.sauceOptions = sauceOptions;
-                        toSavePizza.price += totalPrice(sauceOptions);
-                        toSavePizza.calCount += totalCal(sauceOptions);
-                    }
-    
-                    if(drinks.length > 0){
-                            // Check if there is any error in the drinks list
-                            const drinkErr = drinks.some((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(drinkErr){
-                            // Display the err
-                            return res.status(404).send({drinksErr});
-                        }
-                        toSavePizza.drinks = drinks;
-                        toSavePizza.price += totalPrice(drinks);
-                    }
-    
-                    if(flavoredCrusts.length > 0){
-                            // Check if there is any error in the flavored crust list
-                            const flavoredCrustErr = flavoredCrusts.some((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(flavoredCrustErr){
-                            return res.status(404).send({flavoredCrustErr});
-                        }
-                        toSavePizza.flavoredCrusts = flavoredCrusts;
-                        toSavePizza.price += totalPrice(flavoredCrusts);
-                        toSavePizza.calCount += totalCal(flavoredCrusts);
-                    }
+                    updateItem({flavoredCrusts}, res, toSavePizza);
 
                     // Push each updated pizza's promise to the array
                     resolve(toSavePizza);
@@ -408,89 +337,17 @@ exports.findOrderByIdAndUpdate = (req, res) => {
 
                     toSavePizza.cookOptions = pizza.cookOptions;
                     
-                    if(crustSize !== undefined){
-                        // Is the error propery set
-                        if(crustSize.error){
-                            return res.status(404).send({crustSize});
-                        }
-                        toSavePizza.crustSize = crustSize;
-                        toSavePizza.price += crustSize.price;
-                        toSavePizza.calCount += crustSize.calCount;
-                        toSavePizza.slices = crustSize.slices;
-                    } 
-    
-                    if(meats.length > 0){
-                        // Check if there is any error in the meats list
-                        const meatErr = meats.find((item) => {
-                            return item.error !== undefined;
-                        });
+                    updateItem({crustSize}, res, toSavePizza);
 
-                        if(meatErr){
-                            // Send error back to the user
-                            return res.status(404).send({meatsErr});
-                        }
-                        toSavePizza.meats = meats; 
-                        toSavePizza.price += totalPrice(meats);
-                        toSavePizza.calCount += totalCal(meats);
-                    }
-    
-                    if(otherToppings.length > 0){
-                        // Check if there is any error in the toppings
-                        const otherToppingErr = otherToppings.find((item) => {
-                            return item.error !== undefined;
-                        });
+                    updateItem({meats}, res, toSavePizza);
 
-                        if(otherToppingErr){
-                            // Display the err
-                            return res.status(404).send({otherToppingErr});
-                        }
-                        toSavePizza.otherToppings = otherToppings;
-                        toSavePizza.price += totalPrice(otherToppings);
-                        toSavePizza.calCount += totalCal(otherToppings);
-                    }
-    
-                    if(sauceOptions.length > 0){
-                        // Check if there is any error in the sauces list
-                        const sauceOptionErr = sauceOptions.find((item) => {
-                            return item.error !== undefined;
-                        });
+                    updateItem({otherToppings}, res, toSavePizza);
 
-                        if(sauceOptionErr){
-                            // Display the err
-                            return res.status(404).send({sauceOptionErr});
-                        }
-                        toSavePizza.sauceOptions = sauceOptions;
-                        toSavePizza.price += totalPrice(sauceOptions);
-                        toSavePizza.calCount += totalCal(sauceOptions);
-                    }
+                    updateItem({sauceOptions}, res, toSavePizza);
+                    
+                    updateItem({drinks}, res, toSavePizza);
     
-                    if(drinks.length > 0){
-                         // Check if there is any error in the drink list
-                         const drinkErr = drinks.some((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(drinkErr){
-                            // Display the err
-                            return res.status(404).send({drinksErr});
-                        }
-                        toSavePizza.drinks = drinks;
-                        toSavePizza.price += totalPrice(drinks);
-                    }
-    
-                    if(flavoredCrusts.length > 0){
-                         // Check if there is any error in the flavored crust list
-                         const flavoredCrustErr = flavoredCrusts.some((item) => {
-                            return item.error !== undefined;
-                        });
-
-                        if(flavoredCrustErr){
-                            return res.status(404).send({flavoredCrustErr});
-                        }
-                        toSavePizza.flavoredCrusts = flavoredCrusts;
-                        toSavePizza.price += totalPrice(flavoredCrusts);
-                        toSavePizza.calCount += totalCal(flavoredCrusts);
-                    }
+                    updateItem({flavoredCrusts}, res, toSavePizza);
 
                     // Push each updated pizza's promise to the array
                     resolve(toSavePizza);

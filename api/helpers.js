@@ -81,8 +81,56 @@ var paginatedResults = (model) => {
 }
 
 
+// A function to dynamically update an item
+var updateItem = (item, res, toSavePizza) => {
+    
+    // Get object name
+    var  itemName = Object.keys(item)[0];
+    var eMsg = {}
+    // Is this object a crustSize
+    if(itemName === 'crustSize'){
+        // Update crust
+        if(item[itemName] !== undefined){
+            // Is the error propery set
+            if(item[itemName].error){
+               
+                eMsg.ERROR = item[itemName].error;
+                return res.status(404).send(eMsg);
+            }
+            toSavePizza[itemName] = item[itemName].crustSize;
+            toSavePizza.price += item[itemName].price;
+            toSavePizza.calCount += item[itemName].calCount;
+            toSavePizza.slices = item[itemName].slices;
+            return;
+        }
+    }
+
+    // Deal with other list items
+    if(item[itemName].length > 0){
+        // Check if there is any error in the drinks list
+        const itemErr = item[itemName].find((item) => {
+            return item.error !== undefined;
+        });
+        if(itemErr){
+            // Display the item error
+            eMsg.ERROR = itemErr.error;
+            return res.status(404).send(eMsg);
+        }
+        // If it's a drink don't take a calories count
+        if(itemName !== 'drinks'){
+            toSavePizza.calCount += totalCal(item[itemName]);
+        } 
+
+        toSavePizza[itemName] = item[itemName];
+        toSavePizza.price += totalPrice(item[itemName]);
+    }
+    
+}
+
+
 module.exports = {
    totalCal,
    totalPrice,
-   paginatedResults
+   paginatedResults,
+   updateItem
 };

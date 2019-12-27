@@ -32,7 +32,7 @@ var Sauce = mongoose.model('Sauce', sauceSchema);
 
 var updateSauce = (orderSauce) => {
     return new Promise((resolve, reject) => {  
-        var toSaveSauce = {};
+        var toSaveSauce = {}; 
         Sauce.findOne({name: orderSauce.name})
         .then((dbSauce) => {
             // Validate if DB sauce exists
