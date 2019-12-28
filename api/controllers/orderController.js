@@ -54,8 +54,9 @@ var totalOrdersToday = () => {
 // A promise that returns total number of orders
 var totalOrdersLastHour = () => {
     var lastHour = subHours(new Date(),1);
+    var currentHour = new Date();
     return new Promise((resolve, reject) => {
-        Order.countDocuments({"orderTime": {$gt: lastHour}} , (err, count) => {
+        Order.countDocuments({"orderTime": {$gte: lastHour, $ls: {currentHour}}} , (err, count) => {
             if(!err){
                 resolve(count);
             } else{
