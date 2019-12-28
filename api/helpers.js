@@ -82,10 +82,7 @@ var paginatedResults = (model) => {
 
 
 // A function to dynamically update an item
-var updateItem = (item, res, toSavePizza) => {
-
-    console.log(res)
-    
+var updateItem = (item, res, toSavePizza) => {    
     // Get object name
     var  itemName = Object.keys(item)[0];
     var eMsg = {}
@@ -99,7 +96,8 @@ var updateItem = (item, res, toSavePizza) => {
                 eMsg.ERROR = item[itemName].error;
                 return res.status(404).send(eMsg);
             }
-            toSavePizza[itemName] = item[itemName].crustSize;
+           
+            toSavePizza[itemName] = item.crustSize;
             toSavePizza.price += item[itemName].price;
             toSavePizza.calCount += item[itemName].calCount;
             toSavePizza.slices = item[itemName].slices;

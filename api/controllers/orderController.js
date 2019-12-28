@@ -351,7 +351,7 @@ exports.findOrderByIdAndUpdate = (req, res) => {
                     updateItem({drinks}, res, toSavePizza);
     
                     updateItem({flavoredCrusts}, res, toSavePizza);
-    
+                    //console.log(toSavePizza);
                     // Push each updated pizza's promise to the array
                     resolve(toSavePizza);
                 }); 
@@ -365,6 +365,7 @@ exports.findOrderByIdAndUpdate = (req, res) => {
             insertOrder.pizzas.push(pizza);
             insertOrder.totalQuantity += 1;
         });
+        //console.log(insertOrder);
         // Run update query in the DB
         Order.findByIdAndUpdate(order_id, {$set: insertOrder}, {new: true, useFindAndModify: false})
         .then((updatedOrder) => {
