@@ -198,50 +198,6 @@ exports.getOrderStatusById = (req, res) => {
     });
 };
 
-var updatePizza = (pizza, res) => {
-    // Process each pizza
-    return new Promise(
-        (resolve, reject) => {
-            Promise.all(
-                [
-                    updateCrustSize(pizza),
-                    updatedMeats(pizza.meats),
-                    updatedToppings(pizza.otherToppings),
-                    updatedSauces(pizza.sauceOptions),
-                    updatedDrinks(pizza.drinks),
-                    updatedFlavoredCrusts(pizza.flavoredCrusts)
-                ]
-            )
-            .spread(
-                (crustSize, meats, otherToppings, sauceOptions, drinks, flavoredCrusts) => {
-                /* 
-                  *  Update this pizza's info
-                  *  Update toSavePizza with updated info
-                */
-                var toSavePizza = {};
-                toSavePizza.price = 0;
-                toSavePizza.calCount = 0;
-
-                toSavePizza.cookOptions = pizza.cookOptions;
-
-                updateItem({crustSize}, res, toSavePizza);
-
-                updateItem({meats}, res, toSavePizza);
-
-                updateItem({otherToppings}, res, toSavePizza);
-
-                updateItem({sauceOptions}, res, toSavePizza);
-                
-                updateItem({drinks}, res, toSavePizza);
-
-                updateItem({flavoredCrusts}, res, toSavePizza);
-
-                // Push each updated pizza's promise to the array
-                resolve(toSavePizza);
-            }); 
-        }
-    );
-};
 
 
 // POST: create Order 
@@ -261,7 +217,50 @@ exports.createOrder = (req, res) => {
     // Store orders pizzas into this list
     orderPizzas = req.body.pizzas;
 
-    Promise.map(orderPizzas, updatePizza)
+    Promise.map(orderPizzas, (pizza) => {
+        // Process each pizza
+        return new Promise(
+            (resolve, reject) => {
+                Promise.all(
+                    [
+                        updateCrustSize(pizza),
+                        updatedMeats(pizza.meats),
+                        updatedToppings(pizza.otherToppings),
+                        updatedSauces(pizza.sauceOptions),
+                        updatedDrinks(pizza.drinks),
+                        updatedFlavoredCrusts(pizza.flavoredCrusts)
+                    ]
+                )
+                .spread(
+                    (crustSize, meats, otherToppings, sauceOptions, drinks, flavoredCrusts) => {
+                    /* 
+                      *  Update this pizza's info
+                      *  Update toSavePizza with updated info
+                    */
+                    var toSavePizza = {};
+                    toSavePizza.price = 0;
+                    toSavePizza.calCount = 0;
+    
+                    toSavePizza.cookOptions = pizza.cookOptions;
+    
+                    updateItem({crustSize}, res, toSavePizza);
+    
+                    updateItem({meats}, res, toSavePizza);
+    
+                    updateItem({otherToppings}, res, toSavePizza);
+    
+                    updateItem({sauceOptions}, res, toSavePizza);
+                    
+                    updateItem({drinks}, res, toSavePizza);
+    
+                    updateItem({flavoredCrusts}, res, toSavePizza);
+    
+                    // Push each updated pizza's promise to the array
+                    resolve(toSavePizza);
+                }); 
+            }
+        );
+    })
     .then((updatedPizzas) => {
         // Update the order with all the pizza info
         updatedPizzas.forEach(pizza => {
@@ -315,7 +314,50 @@ exports.findOrderByIdAndUpdate = (req, res) => {
 
     // Process each pizza and return a promise for each 
     // pizza
-    Promise.map(orderPizzas, updatePizza)
+    Promise.map(orderPizzas, (pizza) => {
+        // Process each pizza
+        return new Promise(
+            (resolve, reject) => {
+                Promise.all(
+                    [
+                        updateCrustSize(pizza),
+                        updatedMeats(pizza.meats),
+                        updatedToppings(pizza.otherToppings),
+                        updatedSauces(pizza.sauceOptions),
+                        updatedDrinks(pizza.drinks),
+                        updatedFlavoredCrusts(pizza.flavoredCrusts)
+                    ]
+                )
+                .spread(
+                    (crustSize, meats, otherToppings, sauceOptions, drinks, flavoredCrusts) => {
+                    /* 
+                      *  Update this pizza's info
+                      *  Update toSavePizza with updated info
+                    */
+                    var toSavePizza = {};
+                    toSavePizza.price = 0;
+                    toSavePizza.calCount = 0;
+    
+                    toSavePizza.cookOptions = pizza.cookOptions;
+    
+                    updateItem({crustSize}, res, toSavePizza);
+    
+                    updateItem({meats}, res, toSavePizza);
+    
+                    updateItem({otherToppings}, res, toSavePizza);
+    
+                    updateItem({sauceOptions}, res, toSavePizza);
+                    
+                    updateItem({drinks}, res, toSavePizza);
+    
+                    updateItem({flavoredCrusts}, res, toSavePizza);
+    
+                    // Push each updated pizza's promise to the array
+                    resolve(toSavePizza);
+                }); 
+            }
+        );
+    })
     .then((updatedPizzas) => {
         // Update the order with all the pizza info
         updatedPizzas.forEach(pizza => {

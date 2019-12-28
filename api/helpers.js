@@ -83,6 +83,8 @@ var paginatedResults = (model) => {
 
 // A function to dynamically update an item
 var updateItem = (item, res, toSavePizza) => {
+
+    console.log(res)
     
     // Get object name
     var  itemName = Object.keys(item)[0];
