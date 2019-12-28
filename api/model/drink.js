@@ -67,7 +67,7 @@ var updateDrink = (orderDrink) => {
 var updatedDrinks = (drinksList) => {
     return new Promise(
         (resolve, reject) => {
-            // If we don't have toppings
+            // If we don't have drinks
             if(drinksList === undefined){
                 // Return an empty list
                 resolve([]);

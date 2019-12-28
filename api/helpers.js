@@ -107,12 +107,12 @@ var updateItem = (item, res, toSavePizza) => {
 
     // Deal with other list items
     if(item[itemName].length > 0){
-        // Check if there is any error in the drinks list
+        // Check if there is any error in the item list
         const itemErr = item[itemName].find((item) => {
             return item.error !== undefined;
         });
         if(itemErr){
-            // Display the item error
+            // Display the item error to the user
             eMsg.ERROR = itemErr.error;
             return res.status(404).send(eMsg);
         }
@@ -124,7 +124,6 @@ var updateItem = (item, res, toSavePizza) => {
         toSavePizza[itemName] = item[itemName];
         toSavePizza.price += totalPrice(item[itemName]);
     }
-    
 };
 
 
