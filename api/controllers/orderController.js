@@ -14,6 +14,7 @@ var {updatedSauces} = require('./../model/sauce');
 var {updatedDrinks} = require('./../model/drink');
 var {updatedToppings} = require('./../model/topping');
 
+
 // Get all the helper functions
 var {updateItem} = require('./../helpers');
 
@@ -277,7 +278,7 @@ exports.createOrder = (req, res) => {
             res.json(createdOrder);
         });
     }); 
-};
+}; // POST: create Order 
 
 // PATCH: Find Order by _id and update  
 exports.findOrderByIdAndUpdate = (req, res) => {
