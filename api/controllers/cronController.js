@@ -136,11 +136,29 @@ exports.stopCronJob = (req, res) => {
 };
 
 exports.getAllCronJobs = (req, res) => {
-    Cron.find().populate('orders')
+    Cron.aggregate([
+        {
+            // Performs an equal join on the crons and orders collection
+            $lookup: {
+                from: 'orders', 
+                localField: 'orders',
+                foreignField: '_id',
+                as: 'cronOrder'
+            }
+        },
+        // Filter out unwanted fields
+        {$project: {orders: 0, _id: 0, __v: 0}},
+        // Unwind the cron orders
+        {$unwind: "$cronOrder"}
+       
+    ])
     .exec((err, results) => {
-        // Display each order
+        if(err){
+            return res.status(404).send(err.message);
+        }
+
         res.send(results);
-    })
+    });
 }
 
 
