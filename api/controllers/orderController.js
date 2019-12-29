@@ -97,10 +97,10 @@ var popularItem = (fieldName) => {
     matchFilter[matchFilterKey] = {$ne: []}; 
     return new Promise((resolve, reject) => {
         Order.aggregate([
-            // This filters out this item's empty lists
-            {$match: matchFilter}, 
             // Stage1: unwind the top array
             {$unwind: "$pizzas"},
+            // This filters out this item's empty lists
+            {$match: matchFilter}, 
             // Stage2: Unwind the required item array
             {$unwind: `$${matchFilterKey}`},
             // Stage3: Group items by item name
@@ -352,7 +352,6 @@ exports.findOrderByIdAndUpdate = (req, res) => {
                     updateItem({drinks}, res, toSavePizza);
     
                     updateItem({flavoredCrusts}, res, toSavePizza);
-                    //console.log(toSavePizza);
                     // Push each updated pizza's promise to the array
                     resolve(toSavePizza);
                 }); 
@@ -366,7 +365,6 @@ exports.findOrderByIdAndUpdate = (req, res) => {
             insertOrder.pizzas.push(pizza);
             insertOrder.totalQuantity += 1;
         });
-        //console.log(insertOrder);
         // Run update query in the DB
         Order.findByIdAndUpdate(order_id, {$set: insertOrder}, {new: true, useFindAndModify: false})
         .then((updatedOrder) => {
